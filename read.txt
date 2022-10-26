@@ -1,0 +1,30 @@
+
+func AuthRoutes()
+    - Contains all the routes that are used to authorize the user or admin 
+
+    POST    /login                              - used to login the user and admin
+    POST    /signup                             - used for user to register  
+
+func User()
+    - Contains all the routes for the user to register,recruit and edit there profile 
+
+    GET     /{:username}                        - used to get into user profile
+
+func RegisterTourney()
+    - Contains all the routes to register tournaments_achievements
+
+    POST    tournament/{:username}/register     - used to register the tournaments
+
+func AddRecruitment()
+    - Contains all the routes to add a recruitment
+    
+    POST    recruit/{:username}/Add             - used to add a recruitment
+
+func UserEdit()
+    - Contains all the routes that helps the user to edit there profile
+
+    POST    /edit/{:username}/bio                       - used to edit bio of the user
+    POST    /edit/{:username}/ingame_achievements       - used to edit the ingame achievements of user 
+    POST    /edit/{:username}/social                    - used to edit the user social accounts 
+    POST    /edit/{:username}/tournaments_achievements  - used to edit the user tournaments
+
