@@ -40,7 +40,7 @@ func (t Do) SendOtp(To string) error {
 		Username: Account_Sid,
 		Password: Auth_Token,
 	})
-	
+
 	params := &openapi.CreateVerificationParams{}
 	params.SetTo(To)
 	params.SetChannel("sms")
@@ -48,12 +48,9 @@ func (t Do) SendOtp(To string) error {
 	resp, err := client.VerifyV2.CreateVerification(Service_Sid, params)
 
 	if err != nil {
-		fmt.Println("klklhk")
 		return err
-	} else {
-		fmt.Printf("Sent verification '%s'\n", *resp.Sid)
 	}
-	fmt.Println("done")
+	fmt.Printf("Verification has been send, Id :'%s'\n", *resp.Sid)
 	return nil
 }
 func (t Do) CheckOtp(To, code string) (bool, error) {
@@ -65,7 +62,6 @@ func (t Do) CheckOtp(To, code string) (bool, error) {
 		Username: Account_Sid,
 		Password: Auth_Token,
 	})
-	fmt.Println("CheckOtp")
 	params := &openapi.CreateVerificationCheckParams{}
 	params.SetTo(To)
 	params.SetCode(code)
@@ -73,11 +69,10 @@ func (t Do) CheckOtp(To, code string) (bool, error) {
 	resp, err := client.VerifyV2.CreateVerificationCheck(Service_Sid, params)
 
 	if err != nil {
-		fmt.Println("err here", err.Error())
+		fmt.Println("error :", err.Error())
 		return false, err
 	}
 	if *resp.Status == "approved" {
-		fmt.Println("Correct Otp!")
 		return true, nil
 	}
 	return false, nil

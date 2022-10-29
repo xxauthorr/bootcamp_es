@@ -24,6 +24,7 @@ func main() {
 	database.ConnectDb()
 
 	router := gin.New()
+	router.Use(gin.Logger())
 
 	routes.Authroutes(router)
 	routes.User(router)

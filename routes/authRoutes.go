@@ -17,7 +17,7 @@ func Authroutes(incommingRoutes *gin.Engine) {
 	// To register a new user
 	incommingRoutes.POST("/signup", do.Signup)
 	// To login an existing user
-	incommingRoutes.POST("/Login", do.Login)
+	incommingRoutes.POST("/login", do.Login)
 }
 
 //	Contains all the routes that are used do search an entity from the landing page

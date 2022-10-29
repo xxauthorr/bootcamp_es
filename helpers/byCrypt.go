@@ -1,13 +1,14 @@
 package helpers
 
 import (
-	"fmt"
 	"log"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashPassword(password string) string {
+type ByCrypt struct{}
+
+func (by ByCrypt) HashPassword(password string) string {
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		log.Panic(err)
@@ -15,14 +16,13 @@ func HashPassword(password string) string {
 	}
 	return string(hashPass)
 }
-func verifyPassword(userPassword, givenPassword string) (bool, error) {
+func (by ByCrypt) VerifyPassword(userPassword, givenPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(givenPassword), ([]byte(userPassword)))
 	check := true
 	// msg := ""
 	if err != nil {
-		fmt.Println("error at verify password :", err)
 		check = false
-		return check, err
+		return check
 	}
-	return check, err
+	return check
 }
