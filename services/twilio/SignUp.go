@@ -44,6 +44,7 @@ func (t Do) SendOtp(To string) error {
 	params := &openapi.CreateVerificationParams{}
 	params.SetTo(To)
 	params.SetChannel("sms")
+	// params.SetCustomMessage("This is ")
 
 	resp, err := client.VerifyV2.CreateVerification(Service_Sid, params)
 
@@ -52,6 +53,7 @@ func (t Do) SendOtp(To string) error {
 	}
 	fmt.Printf("Verification has been send, Id :'%s'\n", *resp.Sid)
 	return nil
+
 }
 func (t Do) CheckOtp(To, code string) (bool, error) {
 	if err := LoadEnv(); err != nil {

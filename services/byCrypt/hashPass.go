@@ -1,4 +1,4 @@
-package helpers
+package bycrypt
 
 import (
 	"log"

@@ -27,7 +27,9 @@ func main() {
 	router.Use(gin.Logger())
 
 	routes.Authroutes(router)
+	routes.Team(router)
 	routes.User(router)
+
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusAccepted, gin.H{"msg": "connected"})
 	})

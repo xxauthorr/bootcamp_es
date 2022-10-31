@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"bootcamp_es/models"
 	"bootcamp_es/services/jwt"
 	"net/http"
 
@@ -9,14 +8,16 @@ import (
 )
 
 type Mwares struct {
-	jwt   jwt.Jwt
-	login models.ForJwt
+	jwt  jwt.Jwt
+	Token  *string
 }
 
-func (mw Mwares) Authneticate(ctx *gin.Context) {
+var X string
+
+func (mw *Mwares) Authneticate(ctx *gin.Context) {
 	clientToken := ctx.Request.Header.Get("token")
 	if clientToken == "" {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "No authorization header provided"})
+		ctx.Redirect(http.StatusFound, "/home")
 		ctx.Abort()
 		return
 	}
@@ -26,7 +27,7 @@ func (mw Mwares) Authneticate(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
-	*mw.login.User = claims.User
+	X = claims.User
 	ctx.Set("username", claims.User)
 	ctx.Next()
 }

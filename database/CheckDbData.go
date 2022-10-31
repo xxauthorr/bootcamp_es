@@ -1,13 +1,13 @@
 package database
 
 import (
-	"bootcamp_es/helpers"
+	bycrypt "bootcamp_es/services/byCrypt"
 	"errors"
 	"log"
 )
 
 type Check struct {
-	passHelper helpers.ByCrypt
+	passHelper bycrypt.ByCrypt
 }
 
 func (a Check) CheckPhoneNumber(number string) error {
@@ -23,7 +23,7 @@ func (a Check) CheckPhoneNumber(number string) error {
 		return err
 	}
 	if result != 0 {
-		return errors.New("true")
+		return errors.New("Exist")
 	}
 	return nil
 }
@@ -60,4 +60,16 @@ func (a Check) CheckPassword(user, pass string) (bool, error) {
 		return res, nil
 	}
 	return res, nil
+}
+
+func (a Check) TeamLeaderCheck(leader string) (bool, error) {
+	checkStmnt := `SELECT * FROM team_data WHERE leader = $1;`
+	res, err := Db.Exec(checkStmnt, leader)
+	if err != nil {
+		return false, err
+	}
+	if res, _ := res.RowsAffected(); res != 0 {
+		return false, nil
+	}
+	return true, nil
 }

@@ -6,19 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type route struct {
-	mw middlewares.Mwares
-}
+var mw middlewares.Mwares
 
 // Contains all the routes that are used for the user profile (not to edit)
 
 func User(incommingRoutes *gin.Engine) {
-	var route route
-	incommingRoutes.Use(route.mw.Authneticate)
-
+	incommingRoutes.Use(mw.Authneticate)
+	incommingRoutes.GET("/user_get", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "nothing"})
+	})
 }
 
 // Contains all the routes to edit the control settings (password,email,phone)
-func UserSettigs(incommingRoutes *gin.Engine) {
+// func UserSettings(incommingRoutes *gin.Engine) {
 
-}
+// }
