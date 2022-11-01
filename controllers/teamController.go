@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"bootcamp_es/database"
 	"bootcamp_es/helpers"
 	"bootcamp_es/middlewares"
 	"bootcamp_es/models"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,28 +12,37 @@ import (
 
 type Team struct {
 	teamRegister models.TeamReg
-	help         helpers.Help
+	checkDb      database.Check
+	team         helpers.TeamHelper
 }
 
 func (t *Team) CheckTeamName(ctx *gin.Context) {
-
+	teamName := ctx.Param("team_name")
+	res := t.checkDb.CheckTeam(teamName)
+	if res {
+		ctx.JSON(http.StatusOK, gin.H{"status": res})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": res})
 }
 
 func (t *Team) RegisterTeam(ctx *gin.Context) {
-	token := middlewares.X
+	user := middlewares.TokenUser
 	if err := ctx.BindJSON(&t.teamRegister); err != nil {
-		fmt.Println(t.teamRegister.Players)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	t.teamRegister.Username = user
 	if err := validate.Struct(t.teamRegister); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "false", "msg": "Validation Error"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Validation Error", "error": err.Error()})
 		return
 	}
-	fmt.Println("registerteam")
+	if status := t.checkDb.CheckTeam(t.teamRegister.TeamName); status {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Team name already taken!"})
+		return
+	}
 	// function check whether the user is already in a team, if not the team is registered and the notification to players are send
-	fmt.Println("error HERE")
-	msg, err := t.help.TeamScan(t.teamRegister, token)
+	msg, err := t.team.TeamScanAndInsert(t.teamRegister, user)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

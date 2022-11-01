@@ -8,11 +8,10 @@ import (
 )
 
 type Mwares struct {
-	jwt  jwt.Jwt
-	Token  *string
+	jwt   jwt.Jwt
 }
 
-var X string
+var TokenUser string
 
 func (mw *Mwares) Authneticate(ctx *gin.Context) {
 	clientToken := ctx.Request.Header.Get("token")
@@ -27,7 +26,7 @@ func (mw *Mwares) Authneticate(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
-	X = claims.User
+	TokenUser = claims.User
 	ctx.Set("username", claims.User)
 	ctx.Next()
 }

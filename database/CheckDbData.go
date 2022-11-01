@@ -2,49 +2,44 @@ package database
 
 import (
 	bycrypt "bootcamp_es/services/byCrypt"
-	"errors"
-	"log"
+	"fmt"
 )
 
 type Check struct {
 	passHelper bycrypt.ByCrypt
 }
 
-func (a Check) CheckPhoneNumber(number string) error {
+type DBoperation struct{}
+
+func (a Check) CheckPhoneNumber(number string) bool {
 	checkStmt := `SELECT * FROM user_data WHERE phone = $1;`
-	res, err := Db.Exec(checkStmt, number)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	result, err := res.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
+	res, _ := Db.Exec(checkStmt, number)
+	result, _ := res.RowsAffected()
 	if result != 0 {
-		return errors.New("Exist")
+		return result != 0
 	}
-	return nil
+	return false
 }
 
-func (a Check) CheckUser(username string) error {
+func (a Check) CheckUser(username string) bool {
 
 	checkStmt := `SELECT * FROM user_data WHERE username = $1;`
-	res, err := Db.Exec(checkStmt, username)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	result, err := res.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
+	res, _ := Db.Exec(checkStmt, username)
+	result, _ := res.RowsAffected()
 	if result != 0 {
-		return errors.New("Exist")
+		return result != 0
 	}
-	return nil
+	return false
+}
+
+func (a Check) CheckTeam(teamName string) bool {
+	checkStmt := `SELECT * FROM team_data WHERE team_name = $1;`
+	res, _ := Db.Exec(checkStmt, teamName)
+	result, _ := res.RowsAffected()
+	if result != 0 {
+		return result != 0
+	}
+	return false
 }
 
 func (a Check) CheckPassword(user, pass string) (bool, error) {
@@ -62,14 +57,39 @@ func (a Check) CheckPassword(user, pass string) (bool, error) {
 	return res, nil
 }
 
-func (a Check) TeamLeaderCheck(leader string) (bool, error) {
+// returns true if user is in clan
+func (a Check) CheckUserHasClan(user string) bool {
+	fmt.Println(user)
 	checkStmnt := `SELECT * FROM team_data WHERE leader = $1;`
-	res, err := Db.Exec(checkStmnt, leader)
-	if err != nil {
-		return false, err
-	}
+	res, _ := Db.Exec(checkStmnt, user)
 	if res, _ := res.RowsAffected(); res != 0 {
-		return false, nil
+		return true
 	}
-	return true, nil
+	return false
+}
+
+func (a DBoperation) StartTransaction() {
+	_, err := Db.Exec(`BEGIN;`)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func (a DBoperation) RollBackTransaction() {
+	_, err := Db.Exec(`ROLLBACK;`)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+func (a DBoperation) CommitTransaction() {
+	_, err := Db.Exec(`COMMIT;`)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+func (a DBoperation) EndTransaction() {
+	_, err := Db.Exec(`END;`)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }

@@ -21,10 +21,10 @@ type Auth struct {
 	signup     models.SignupForm
 	login      models.LoginForm
 	forgetPass models.ForgetPassword
-	changePass models.ChangePassword
-	dbCheck    database.Check
-	UserDB     database.User
-	help       helpers.Help
+	// changePass models.ChangePassword
+	dbCheck database.Check
+	UserDB  database.User
+	help    helpers.Help
 	// twilio     twilio.Do
 	token jwt.Jwt
 }
@@ -36,33 +36,31 @@ func (do Auth) CheckUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "false", "msg": "No username has given !"})
 		return
 	}
-	err := do.dbCheck.CheckUser(username)
-	if err != nil {
-		if err.Error() != "Exist" {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"status": "false", "error": err.Error()})
-			return
-		}
-	}
-	if err == nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "false", "msg": "username does'nt exist !"})
+	res := do.dbCheck.CheckUser(username)
+	if res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": res})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"status": "true"})
+	ctx.JSON(http.StatusOK, gin.H{"status": res})
 }
 
 func (do *Auth) Home(ctx *gin.Context) {
-	user := do.help.Authneticate(ctx);
-	if user  == "" {
+	status, user := do.help.Authneticate(ctx)
+	if !status {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": status, "msg": "You must login"})
+		return
+	}
+	if user == "" {
 		ctx.JSON(200, gin.H{"status": false})
 		return
 	}
 	// defer func() {
 	// 	if e := recover(); e != nil {
-		
+
 	// 		fmt.Println(e, "jdhgsd")
 	// 	}
 	// }()
-	ctx.JSON(200, gin.H{"status": true, "user": user })
+	ctx.JSON(200, gin.H{"status": true, "user": user})
 }
 
 //	func send otp to the given phone number
@@ -73,21 +71,17 @@ func (do *Auth) SendPhoneOTP(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	temp := "000000"
-	do.forOtp.Otp = &temp
+	fmt.Println("changed")
+	do.forOtp.Otp = "000000"
 	if err := validate.Struct(do.forOtp); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("ok")
 	// Checking whether the number already exits or not
-	if err := do.dbCheck.CheckPhoneNumber(*do.forOtp.Number); err != nil {
-		if err.Error() == "Exist" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Given number already exist !"})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if res := do.dbCheck.CheckPhoneNumber(*do.forOtp.Number); res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Given number already exist !"})
 		return
+
 	}
 
 	// Calling twilio service to send otp
@@ -112,17 +106,17 @@ func (do *Auth) CheckPhoneOtp(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	// status, err := do.twilio.CheckOtp(*do.forOtp.Number, *do.forOtp.Otp)
+	// status, err := do.twilio.CheckOtp(*do.forOtp.Number, do.forOtp.Otp)
 	// if err != nil {
 	// 	ctx.JSON(http.StatusInternalServerError, err.Error())
 	// 	return
 	// }
 	// if !status {
-	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Entered wrong do !"})
+	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Otp Does'nt match !"})
 	// 	return
 	// }
 
-	ctx.JSON(http.StatusOK, gin.H{"msg": "Take me to the signup page"})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "next": "Take me to the signup page"})
 
 }
 
@@ -131,32 +125,27 @@ func (do *Auth) Signup(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	do.signup.Phone = do.forOtp.Number
+	do.signup.Phone = *do.forOtp.Number
 	if err := validate.Struct(do.signup); err != nil {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	if err := do.dbCheck.CheckUser(*do.signup.UserName); err != nil {
-		if err.Error() == "Exist" {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Username already taken"})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if status := do.dbCheck.CheckUser(do.signup.UserName); status {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "msg": "Username already taken"})
 		return
 	}
-
 	// do jwtt !!!!
-	token, refresToken, err := do.token.GenerateToken(*do.signup.UserName)
+	token, refresToken, err := do.token.GenerateToken(do.signup.UserName)
 	if err != nil {
 		fmt.Println("error at generating token:", err.Error())
 	}
 
-	if err := do.UserDB.RegisterUser(do.signup); err != nil {
+	if err := do.UserDB.InsertUser(do.signup); err != nil {
 		ctx.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"msg": "You are logged in", "token": token, "refresh_token": refresToken})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "token": token, "refresh_token": refresToken})
 }
 
 func (do *Auth) Login(ctx *gin.Context) {
@@ -172,18 +161,12 @@ func (do *Auth) Login(ctx *gin.Context) {
 	// 	ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid entry, Suspecious !"})
 	// 	return
 	// }
-	err := do.dbCheck.CheckUser(*do.login.UserName)
-	if err == nil {
+	res := do.dbCheck.CheckUser(do.login.UserName)
+	if !res {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Username does'nt exist !"})
 		return
 	}
-	if err.Error() != "Exist" {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-
-	}
-
-	res, err := do.dbCheck.CheckPassword(*do.login.UserName, *do.login.Password)
+	res, err := do.dbCheck.CheckPassword(do.login.UserName, do.login.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -193,11 +176,11 @@ func (do *Auth) Login(ctx *gin.Context) {
 		return
 	}
 
-	token, refreshToken, err := do.token.GenerateToken(*do.login.UserName)
+	token, refreshToken, err := do.token.GenerateToken(do.login.UserName)
 	if err != nil {
 		fmt.Println("error at generating token:", err.Error())
 	}
-	ctx.JSON(http.StatusOK, gin.H{"status": "Logged In", "token": token, "refresh_token": refreshToken})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "next": "take me to home", "token": token, "refresh_token": refreshToken})
 }
 
 func (do *Auth) ForgotPassword(ctx *gin.Context) {
@@ -205,6 +188,7 @@ func (do *Auth) ForgotPassword(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error ": err.Error()})
 		return
 	}
+	do.forgetPass.Password = "asdfghjk"
 	if do.forgetPass.Phone == nil && do.forgetPass.Username != nil {
 		temp := "123456789"
 		do.forgetPass.Phone = &temp
@@ -219,13 +203,9 @@ func (do *Auth) ForgotPassword(ctx *gin.Context) {
 	}
 	// if the user gives the username to change password
 	if *do.forgetPass.Phone == "123456789" {
-		err, phone := do.help.GetPhone(*do.forgetPass.Username)
+		phone := do.help.GetPhone(*do.forgetPass.Username)
 		if phone == "" {
-			if err == nil {
-				ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Username does'nt exist !"})
-				return
-			}
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Username does'nt exist !"})
 			return
 		}
 		do.forgetPass.Phone = &phone
@@ -238,13 +218,9 @@ func (do *Auth) ForgotPassword(ctx *gin.Context) {
 		return
 	}
 	// user gives the phone to change password
-	err, username := do.help.GetUsername(*do.forgetPass.Phone)
+	username := do.help.GetUsername(*do.forgetPass.Phone)
 	if username == "" {
-		if err == nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Account with this phone number does'nt exist !"})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Account with this phone number does'nt exist !"})
 		return
 	}
 	do.forgetPass.Username = &username
@@ -252,7 +228,6 @@ func (do *Auth) ForgotPassword(ctx *gin.Context) {
 	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	// 	return
 	// }
-	fmt.Println(*do.forgetPass.Phone, " ")
 	ctx.JSON(http.StatusOK, gin.H{"msg": "otp has been send to your number"})
 }
 
@@ -267,7 +242,7 @@ func (do *Auth) VerifyPassOtp(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error ": err.Error()})
 		return
 	}
-	// status, err := do.twilio.CheckOtp(*do.forOtp.Number, *do.forOtp.Otp)
+	// status, err := do.twilio.CheckOtp(*do.forOtp.Number, do.forOtp.Otp)
 	// if err != nil {
 	// 	ctx.JSON(http.StatusInternalServerError, err.Error())
 	// 	return
@@ -280,18 +255,21 @@ func (do *Auth) VerifyPassOtp(ctx *gin.Context) {
 }
 
 func (do *Auth) ChangePassword(ctx *gin.Context) {
-	if err := ctx.BindJSON(&do.changePass); err != nil {
+	temp1 := *do.forgetPass.Phone
+	if err := ctx.BindJSON(&do.forgetPass); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error ": err.Error()})
 		return
 	}
-	do.changePass.Phone = do.forOtp.Number
-	if err := validate.Struct(do.changePass); err != nil {
+	temp2 := "abcdefg"
+	do.forgetPass.Phone = &temp1
+	do.forgetPass.Username = &temp2
+	if err := validate.Struct(do.forgetPass); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error ": err.Error()})
 		return
 	}
-	if err := do.UserDB.ChangePass(*do.changePass.Phone, *do.changePass.Password); err != nil {
+	if err := do.UserDB.ChangePass(*do.forgetPass.Phone, do.forgetPass.Password); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"msg": "go to login page "})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "msg": "go to login page "})
 }
