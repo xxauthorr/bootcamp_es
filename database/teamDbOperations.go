@@ -19,7 +19,7 @@ func (t *Insert) InsertTeamNotification(player, team, role string) error {
 }
 
 func (t *Insert) InsertTeam(team models.TeamReg, user string) error {
-	insertStmnt := `INSERT INTO team_data(team_name,leader,istagram,discord) values ($1,$2,$3,$4);`
+	insertStmnt := `INSERT INTO team_data(team_name,leader,instagram,discord) values ($1,$2,$3,$4);`
 	_, err := Db.Exec(insertStmnt, team.TeamName, user, team.Instagram, team.Discord)
 	if err != nil {
 		return err

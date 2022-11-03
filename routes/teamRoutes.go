@@ -11,7 +11,7 @@ var (
 )
 
 func Team(incommingRoutes *gin.Engine) {
-	incommingRoutes.Use(mw.Authneticate)
+	incommingRoutes.Use(mw.AuthneticateToken)
 	incommingRoutes.POST("/team_reg", team.RegisterTeam)
-
+	incommingRoutes.GET("/verify_team/:teamname", team.CheckTeamName)
 }

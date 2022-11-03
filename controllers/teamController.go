@@ -16,8 +16,8 @@ type Team struct {
 	team         helpers.TeamHelper
 }
 
-func (t *Team) CheckTeamName(ctx *gin.Context) {
-	teamName := ctx.Param("team_name")
+func (t Team) CheckTeamName(ctx *gin.Context) {
+	teamName := ctx.Param("teamname")
 	res := t.checkDb.CheckTeam(teamName)
 	if res {
 		ctx.JSON(http.StatusOK, gin.H{"status": res})
@@ -26,7 +26,7 @@ func (t *Team) CheckTeamName(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": res})
 }
 
-func (t *Team) RegisterTeam(ctx *gin.Context) {
+func (t Team) RegisterTeam(ctx *gin.Context) {
 	user := middlewares.TokenUser
 	if err := ctx.BindJSON(&t.teamRegister); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

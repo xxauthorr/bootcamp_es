@@ -11,6 +11,7 @@ type Check struct {
 
 type DBoperation struct{}
 
+// if the given number exist return true 	
 func (a Check) CheckPhoneNumber(number string) bool {
 	checkStmt := `SELECT * FROM user_data WHERE phone = $1;`
 	res, _ := Db.Exec(checkStmt, number)
@@ -21,6 +22,7 @@ func (a Check) CheckPhoneNumber(number string) bool {
 	return false
 }
 
+// if user exists return true 
 func (a Check) CheckUser(username string) bool {
 
 	checkStmt := `SELECT * FROM user_data WHERE username = $1;`

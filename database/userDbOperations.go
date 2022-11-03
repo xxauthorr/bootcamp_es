@@ -3,6 +3,7 @@ package database
 import (
 	model "bootcamp_es/models"
 	bycrypt "bootcamp_es/services/byCrypt"
+	"log"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func (u User) InsertUser(user model.SignupForm) error {
 
 func (u User) ChangePass(data, password string) error {
 	password = u.helper.HashPassword(password)
-	if data[0] == '+' {
+	if string(data[0]) == "+" {
 		updateStmt := `UPDATE user_data SET password = $1 WHERE phone = $2;`
 		_, err := Db.Exec(updateStmt, password, data)
 		if err != nil {
@@ -40,4 +41,72 @@ func (u User) ChangePass(data, password string) error {
 		return err
 	}
 	return nil
+}
+
+func (u User) UserProfileData(user string) (bool, model.UserProfileData) {
+	var (
+		id                                                   string
+		email, bio, team, crew, instagram, discord, whatsapp *string
+	)
+	var userData = model.UserProfileData{}
+	getBioData := `SELECT id,username,phone,email,bio,team,crew,popularity,created_at FROM user_data WHERE username = $1;`
+	row := Db.QueryRow(getBioData, user)
+	if row.Err() != nil {
+		log.Panic(row.Err())
+		return false, userData
+	}
+	row.Scan(&id, &userData.UserName, &userData.Phone, &email, &bio, &team, &crew, &userData.Popularity, &userData.Created_at)
+	// null check
+	null := ""
+	if email == nil {
+		email = &null
+	}
+	if bio == nil {
+		bio = &null
+	}
+	if team == nil {
+		team = &null
+	}
+	if crew == nil {
+		crew = &null
+	}
+	userData = model.UserProfileData{
+		Email: *email,
+		Bio:   *bio,
+		Team:  *team,
+		Crew:  *crew,
+	}
+	res, err := Db.Exec(`SELECT * FROM user_social WHERE id = $1;`, id)
+	if err != nil {
+		log.Panic(err)
+		return false, userData
+	}
+	result, _ := res.RowsAffected()
+	if result != 0 {
+		getSocialData := `SELECT instagram,whatsapp,discord FROM user_social WHERE Id = $1;`
+		row = Db.QueryRow(getSocialData, id)
+		if row.Err() != nil {
+			log.Panic(row.Err())
+			return false, userData
+		}
+		row.Scan(&instagram, &whatsapp, &discord)
+		//null check
+		null := ""
+		if instagram == nil {
+			instagram = &null
+		}
+		if whatsapp == nil {
+			whatsapp = &null
+		}
+		if discord == nil {
+			discord = &null
+		}
+		userData = model.UserProfileData{
+			Instagram: *instagram,
+			Whatsapp: *whatsapp,
+			Discord: *discord,
+		}
+	}
+
+	return true, userData
 }
