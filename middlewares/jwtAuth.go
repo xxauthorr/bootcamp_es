@@ -16,7 +16,7 @@ var TokenUser string
 func (mw *Mwares) AuthneticateToken(ctx *gin.Context) {
 	clientToken := ctx.Request.Header.Get("token")
 	clientRefreshToken := ctx.Request.Header.Get("referesh_token")
-	if clientToken == "" || clientRefreshToken == "" {
+	if clientToken == "" {
 		ctx.Redirect(http.StatusFound, "/home")
 		ctx.Abort()
 		return
@@ -36,7 +36,7 @@ func (mw *Mwares) AuthneticateToken(ctx *gin.Context) {
 					return
 				}
 				if err == "token is expired" {
-					ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "you must login"})
+					ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Refresh token expired, you must login"})
 					return
 				}
 				ctx.JSON(http.StatusOK, gin.H{"error": err})

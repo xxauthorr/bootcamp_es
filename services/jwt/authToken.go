@@ -40,7 +40,7 @@ func (j Jwt) GenerateToken(userName string) (string, string, error) {
 	claims := &SignedDetails{
 		User: userName,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Minute * time.Duration(1)).Unix(),
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(1)).Unix(),
 		},
 	}
 

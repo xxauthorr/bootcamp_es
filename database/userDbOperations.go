@@ -3,6 +3,7 @@ package database
 import (
 	model "bootcamp_es/models"
 	bycrypt "bootcamp_es/services/byCrypt"
+	"fmt"
 	"log"
 	"time"
 )
@@ -38,6 +39,17 @@ func (u User) ChangePass(data, password string) error {
 	updateStmt := `UPDATE user_data SET password = $1 WHERE username = $2;`
 	_, err := Db.Exec(updateStmt, password, data)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u User) UpdateBio(data model.UserBioEdit, avatar string) error {
+	updated_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	updateStmnt := "UPDATE user_data SET bio = $1,crew = $2,role = $3,avatar = $4,updated_at = $5 WHERE username = $6;"
+	_, err := Db.Exec(updateStmnt, data.Bio, data.Crew, data.Role, avatar, updated_at, data.UserName)
+	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 	return nil
@@ -103,10 +115,32 @@ func (u User) UserProfileData(user string) (bool, model.UserProfileData) {
 		}
 		userData = model.UserProfileData{
 			Instagram: *instagram,
-			Whatsapp: *whatsapp,
-			Discord: *discord,
+			Whatsapp:  *whatsapp,
+			Discord:   *discord,
 		}
 	}
 
 	return true, userData
+}
+
+func (u User) InsertAchievements(user, content, location string) bool {
+	var id int64
+	getStmnt := `SELECT id FROM user_data WHERE username = $1;`
+	row := Db.QueryRow(getStmnt, user)
+	if err := row.Scan(&id); err != nil {
+		transaction.RollBackTransaction()
+		fmt.Println(err.Error())
+		return true
+	}
+
+	insertStmnt := `INSERT INTO user_achievements(id,type,data) VALUES ($1,$2,$3)`
+	_, err := Db.Exec(insertStmnt, id, content, location)
+	if err != nil {
+		transaction.RollBackTransaction()
+		fmt.Println("error here '")
+		fmt.Println(err.Error())
+		return false
+	}
+	transaction.CommitTransaction()
+	return true
 }

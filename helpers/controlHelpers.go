@@ -13,10 +13,6 @@ type Help struct {
 	tokenCheck     jwt.Jwt
 }
 
-// func (h *Help) DelChar(s []rune, index int) []rune {
-// 	return append(s[0:index], s[index+1:]...)
-// }
-
 func (h Help) GetPhone(username string) string {
 	res := h.check.CheckUser(username)
 	if res {
@@ -41,7 +37,7 @@ func (h Help) Authneticate(ctx *gin.Context) (bool, string) {
 	if clientToken == "" {
 		return false, ""
 	}
-	// do like authenticate token 
+	// do like authenticate token
 	//ctx.Request.Header.Get("refresh_token")
 	claims, err := h.tokenCheck.ValidateAccessToken(clientToken)
 	if err != "" {
@@ -56,10 +52,13 @@ func (h Help) NakeString(value string) string {
 	var val string = ""
 	count := len(value) - 5
 	for i := range value {
-		if i >= count {
+		if i >= count+4 {
+			val = val + string(value[i])
+		} else if i >= count {
 			val = val + "*"
+		} else {
+			val = val + string(value[i])
 		}
-		val = val + string(value[i])
 	}
 	return val
 }
