@@ -9,18 +9,19 @@ import (
 
 var mw middlewares.Mwares
 var edit controllers.UserEdit
+var user controllers.User
 
 // Contains all the routes that are used for the user profile (not to edit)
 
 func User(incommingRoutes *gin.Engine) {
-	incommingRoutes.Use(mw.AuthneticateToken)
-	// incommingRoutes.Group("/profile")
-	incommingRoutes.GET("/:username")
-	incommingRoutes.PUT("/editbio", edit.BioEdit)
-	incommingRoutes.PUT("/addachievements", edit.UserAcheivementsAdd)
-	incommingRoutes.GET("/user_get", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "nothing"})
-	})
+	route := incommingRoutes.Group("/user")
+	route.Use(mw.AuthneticateToken)
+	route.GET("/:username", user.UserProfile)
+	route.PUT("/editbio", edit.BioEdit)
+	route.PUT("/editsocial", edit.UserSocialEdit)
+	route.PUT("/addachievements", edit.UserAcheivementsAdd)
+	route.DELETE("/delachievements", edit.UserAcheivementsDelete)
+
 }
 
 // Contains all the routes to edit the control settings (password,email,phone)

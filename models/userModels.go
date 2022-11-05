@@ -3,22 +3,30 @@ package models
 import "mime/multipart"
 
 type UserProfileData struct {
-	UserName   string
-	Phone      string
-	Email      string
-	Bio        string
-	Team       string
-	Crew       string
-	Popularity string
-	Created_at string
-	Instagram  string
-	Discord    string
-	Whatsapp   string
+	Id               string
+	UserName         string
+	Phone            string
+	Popularity       string
+	Created_at       string
+	Email            *string
+	Bio              *string
+	Team             *string
+	Crew             *string
+	Instagram        *string
+	Discord          *string
+	Whatsapp         *string
+	UserNotification []Notification
+	UserAchievements UserAchievements
+}
+type Notification struct {
+	Time string
+	Team string
+	Role string
 }
 
 type UserAchievements struct {
-	UserName    string `json:"username" validate:"required,min=4,max=12"`
-	Achievement string `json:"achievement" binding:"required"`
+	Ingame  []string
+	Tourney []string
 }
 
 type UserBioEdit struct {
@@ -31,11 +39,18 @@ type UserBioEdit struct {
 
 type UserSocialEdit struct {
 	UserName  string `json:"username" validate:"required,min=4,max=12"`
-	Instagram string `json:"social"`
+	Instagram string `json:"instagram"`
+	Whatsapp  string `json:"whatsapp"`
+	Discord   string `json:"discord"`
 }
 
-type UserAchievementsEdit struct {
-	Content     string                `form:"type" validate:"required"`
-	UserName    string                `form:"username" validate:"required,min=4,max=12"`
-	Achievement *multipart.FileHeader `form:"data" binding:"required"`
+type UserAchievementsAdd struct {
+	Content  string                `form:"type" validate:"required"`
+	UserName string                `form:"username" validate:"required,min=4,max=12"`
+	Data     *multipart.FileHeader `form:"data" binding:"required"`
+}
+
+type UserAchievementsDel struct {
+	UserName string `json:"username" validate:"required,min=4,max=12"`
+	Data     string `json:"data" validate:"required"`
 }

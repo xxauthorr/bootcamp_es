@@ -39,7 +39,7 @@ func (do Auth) CheckUser(ctx *gin.Context) {
 		return
 	}
 	res := do.dbCheck.CheckUser(username)
-	if res {
+	if !res {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": res})
 		return
 	}
@@ -106,15 +106,15 @@ func (do Auth) SignUp(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"status": false, "msg": "Account already exist using this username"})
 		return
 	}
-	res, err := do.twilio.CheckOtp(do.signup.Phone, do.signup.Otp)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, false)
-		return
-	}
-	if !res {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": res, "msg": "otp is invalid !"})
-		return
-	}
+	// res, err := do.twilio.CheckOtp(do.signup.Phone, do.signup.Otp)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, false)
+	// 	return
+	// }
+	// if !res {
+	// 	ctx.JSON(http.StatusBadRequest, gin.H{"status": res, "msg": "otp is invalid !"})
+	// 	return
+	// }
 	if err := do.UserDB.InsertUser(do.signup); err != nil {
 		ctx.Redirect(http.StatusInternalServerError, "/home")
 		return

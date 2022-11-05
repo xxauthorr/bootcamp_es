@@ -10,7 +10,7 @@ type Insert struct {
 
 func (t *Insert) InsertTeamNotification(player, team, role string) error {
 
-	insertStmnt := `INSERT INTO user_notify(team,player,role) VALUES ($1,$2,$3)`
+	insertStmnt := `INSERT INTO user_notification(team,player,role) VALUES ($1,$2,$3)`
 	_, err := Db.Exec(insertStmnt, team, player, role)
 	if err != nil {
 		return err
