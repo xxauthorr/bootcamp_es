@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"bootcamp_es/database"
 	"bootcamp_es/services/jwt"
 	"net/http"
 
@@ -8,12 +9,13 @@ import (
 )
 
 type Mwares struct {
-	jwt jwt.Jwt
+	jwt   jwt.Jwt
+	check database.Check
 }
 
 var TokenUser string
 
-func (mw *Mwares) AuthneticateToken(ctx *gin.Context) {
+func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 	clientToken := ctx.Request.Header.Get("token")
 	clientRefreshToken := ctx.Request.Header.Get("referesh_token")
 	if clientToken == "" {
@@ -52,5 +54,13 @@ func (mw *Mwares) AuthneticateToken(ctx *gin.Context) {
 	}
 	TokenUser = claims.User
 	ctx.Set("username", claims.User)
+	ctx.Next()
+}
+
+func (mw Mwares) CheckUserType(ctx *gin.Context) {
+	if res := mw.check.CheckUserType(TokenUser); res != "ADMIN" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Only Admin can Access!!"})
+		return
+	}
 	ctx.Next()
 }

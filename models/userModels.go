@@ -3,22 +3,23 @@ package models
 import "mime/multipart"
 
 type UserProfileData struct {
-	Id               string
-	UserName         string
-	Phone            string
-	Popularity       string
-	Created_at       string
-	Email            *string
-	Bio              *string
-	Team             *string
-	Crew             *string
-	Instagram        *string
-	Discord          *string
-	Whatsapp         *string
-	UserNotification []Notification
-	UserAchievements UserAchievements
+	Id                string
+	UserName          string
+	Phone             string
+	Popularity        string
+	Created_at        string
+	Email             *string
+	Bio               *string
+	Team              *string
+	Crew              *string
+	Instagram         *string
+	Discord           *string
+	Whatsapp          *string
+	UserNotifications []Notification
+	UserAchievements  UserAchievements
 }
 type Notification struct {
+	Id   string
 	Time string
 	Team string
 	Role string
@@ -31,7 +32,7 @@ type UserAchievements struct {
 
 type UserBioEdit struct {
 	UserName string                `form:"username" validate:"required,min=4,max=12"`
-	Bio      string                `form:"user_bio" validate:"max=130"`
+	Bio      string                `form:"bio" validate:"max=130"`
 	Crew     string                `form:"crew" validate:"max=20"`
 	Role     string                `form:"role" validate:"max=20"`
 	Avatar   *multipart.FileHeader `form:"avatar" binding:"required"`
@@ -53,4 +54,9 @@ type UserAchievementsAdd struct {
 type UserAchievementsDel struct {
 	UserName string `json:"username" validate:"required,min=4,max=12"`
 	Data     string `json:"data" validate:"required"`
+}
+
+type UserNotification struct {
+	Id     string `json:"id" validate:"required"`
+	Action string `json:"action" validate:"required"`
 }

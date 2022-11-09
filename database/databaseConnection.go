@@ -8,6 +8,8 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type config struct {
@@ -20,6 +22,8 @@ type config struct {
 }
 
 var Db *sql.DB
+
+// var gormDb *gorm.DB
 
 func ConnectDb() error {
 	// loads env file
@@ -38,7 +42,7 @@ func ConnectDb() error {
 		sslMode: os.Getenv("DB_SSLMODE"),
 	}
 
-	psql := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s sslmode=%s",
+	conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s sslmode=%s",
 		configure.host,
 		configure.port,
 		configure.user,
@@ -46,7 +50,13 @@ func ConnectDb() error {
 		configure.dbName,
 		configure.sslMode)
 
-	Db, err = sql.Open(configure.user, psql)
+	gormDb, err := gorm.Open(postgres.Open(conf), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Error executing gorm  - ", err)
+		return err
+	}
+	AutoMigrateTables(gormDb)
+	Db, err = sql.Open(configure.user, conf)
 	if err != nil {
 		log.Fatal("Error connecting to database - ", err)
 		return err

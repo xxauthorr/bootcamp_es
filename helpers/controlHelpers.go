@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"bootcamp_es/database"
+	"bootcamp_es/models"
 	"bootcamp_es/services/jwt"
 
 	"github.com/gin-gonic/gin"
@@ -61,4 +62,10 @@ func (h Help) NakeString(value string) string {
 		}
 	}
 	return val
+}
+
+func (h Help) Search(data models.Search){
+	if data.Entity == "user"{
+		
+	}
 }

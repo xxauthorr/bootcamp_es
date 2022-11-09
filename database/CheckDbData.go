@@ -3,6 +3,7 @@ package database
 import (
 	bycrypt "bootcamp_es/services/byCrypt"
 	"fmt"
+	"log"
 )
 
 type Check struct {
@@ -11,7 +12,7 @@ type Check struct {
 
 type DBoperation struct{}
 
-// if the given number exist return true 	
+// if the given number exist return true
 func (a Check) CheckPhoneNumber(number string) bool {
 	checkStmt := `SELECT * FROM user_data WHERE phone = $1;`
 	res, _ := Db.Exec(checkStmt, number)
@@ -22,7 +23,7 @@ func (a Check) CheckPhoneNumber(number string) bool {
 	return false
 }
 
-// if user exists return true 
+// if user exists return true
 func (a Check) CheckUser(username string) bool {
 
 	checkStmt := `SELECT * FROM user_data WHERE username = $1;`
@@ -61,13 +62,36 @@ func (a Check) CheckPassword(user, pass string) (bool, error) {
 
 // returns true if user is in clan
 func (a Check) CheckUserHasClan(user string) bool {
-	fmt.Println(user)
 	checkStmnt := `SELECT * FROM team_data WHERE leader = $1;`
 	res, _ := Db.Exec(checkStmnt, user)
 	if res, _ := res.RowsAffected(); res != 0 {
 		return true
 	}
 	return false
+}
+
+// returns the user type
+func (a Check) CheckUserType(username string) string {
+	var res string
+	checkStmnt := `SELECT user_type FROM user_data WHERE username = $1;`
+	row := Db.QueryRow(checkStmnt, username)
+	if err := row.Scan(&res); err != nil {
+		fmt.Println(err.Error())
+		log.Panic(err.Error())
+		return ""
+	}
+	return res
+}
+
+func (a Check) GetTeamFromLeader(leader string) string {
+	var teamName string
+	getTeam := `SELECT team_name FROM team_data WHERE leader = $1;`
+	row := Db.QueryRow(getTeam, leader)
+	if err := row.Scan(&teamName); err != nil {
+		log.Panic(err.Error())
+		return ""
+	}
+	return teamName
 }
 
 func (a DBoperation) StartTransaction() {
@@ -83,6 +107,7 @@ func (a DBoperation) RollBackTransaction() {
 		fmt.Println(err.Error())
 	}
 }
+
 func (a DBoperation) CommitTransaction() {
 	_, err := Db.Exec(`COMMIT;`)
 	if err != nil {

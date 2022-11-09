@@ -21,6 +21,7 @@ func User(incommingRoutes *gin.Engine) {
 	route.PUT("/editsocial", edit.UserSocialEdit)
 	route.PUT("/addachievements", edit.UserAcheivementsAdd)
 	route.DELETE("/delachievements", edit.UserAcheivementsDelete)
+	route.PUT("/updatenotification",edit.UpdateNotification)
 
 }
 

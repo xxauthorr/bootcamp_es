@@ -5,6 +5,8 @@ import (
 	"bootcamp_es/helpers"
 	"bootcamp_es/middlewares"
 	"bootcamp_es/models"
+	amazons3 "bootcamp_es/services/AmazonS3"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,18 +14,29 @@ import (
 
 type Team struct {
 	teamRegister models.TeamReg
-	checkDb      database.Check
-	team         helpers.TeamHelper
+	// teamDb 		database.Team
+	checkDb database.Check
+	team    helpers.TeamHelper
+}
+type EditTeam struct {
+	edit                database.TeamProfileUpdate
+	teamAddAchievements models.TeamAchievementsAdd
+	bucket              amazons3.S3
+	transaction         database.DBoperation
 }
 
-func (t Team) CheckTeamName(ctx *gin.Context) {
-	teamName := ctx.Param("teamname")
-	res := t.checkDb.CheckTeam(teamName)
-	if res {
-		ctx.JSON(http.StatusOK, gin.H{"status": res})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"status": res})
+func (t Team) TeamProfle(ctx *gin.Context) {
+	// teamname := ctx.Param("teamname")
+	// if teamname == "" {
+	// 	ctx.JSON(http.StatusNotFound, nil)
+	// 	return
+	// }
+	// if res := t.checkDb.CheckTeam(teamname); !res {
+	// 	ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Team not found!"})
+	// 	return
+	// }
+	// teamData := t.teamDb.FetchTeamData(teamname)
+
 }
 
 func (t Team) RegisterTeam(ctx *gin.Context) {
@@ -52,4 +65,35 @@ func (t Team) RegisterTeam(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"msg": "team is registered"})
+}
+
+func (c EditTeam) TeamAddAchievements(ctx *gin.Context) {
+	if err := ctx.ShouldBind(&c.teamAddAchievements); err != nil {
+		ctx.JSON(http.StatusBadRequest, false)
+		return
+	}
+	c.teamAddAchievements.TeamName = middlewares.Team
+	if err := validate.Struct(c.teamAddAchievements); err != nil {
+		fmt.Println(err.Error())
+		ctx.JSON(http.StatusBadRequest, false)
+		return
+	}
+	val := c.edit.GetAchievmentsName(c.teamAddAchievements)
+	if val == "" {
+		ctx.JSON(http.StatusInternalServerError, false)
+		return
+	}
+	location, err := c.bucket.UploadToS3(c.teamAddAchievements.Data, c.teamAddAchievements.TeamName+"_"+c.teamAddAchievements.Content+"_"+val+".jpg")
+	if err != nil {
+		c.transaction.RollBackTransaction()
+		fmt.Println("s3 error")
+		ctx.JSON(http.StatusInternalServerError, false)
+		return
+	}
+	res := c.edit.InsertTeamAchievements(location,val)
+	if !res {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Data insertion error"})
+		return
+	}
+
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type TeamHelper struct {
-	team        database.Insert
+	team        database.Team
 	check       database.Check
 	dbOperation database.DBoperation
 }
@@ -38,3 +38,4 @@ func (t TeamHelper) TeamScanAndInsert(team models.TeamReg, user string) (string,
 	t.dbOperation.CommitTransaction()
 	return "", nil
 }
+

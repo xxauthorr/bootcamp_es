@@ -22,23 +22,29 @@ type Auth struct {
 	signup         models.SignupForm
 	login          models.LoginForm
 	forgetPass     models.ForgetPassword
-	forOtp         models.ForOtp
 	changePassword models.ChangePassword
 	dbCheck        database.Check
 	UserDB         database.User
 	help           helpers.Help
 	twilio         twilio.Do
 	token          jwt.Jwt
+	admin          AdminControllers
 }
 
 // used to check weather the user is already exist or not
 func (do Auth) CheckUser(ctx *gin.Context) {
-	username := ctx.Param("username")
-	if username == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "false", "msg": "No username has given !"})
+	userName := ctx.Param("username")
+	res := do.dbCheck.CheckUser(userName)
+	if !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": res})
 		return
 	}
-	res := do.dbCheck.CheckUser(username)
+	ctx.JSON(http.StatusOK, gin.H{"status": res})
+}
+
+func (do Auth) CheckTeam(ctx *gin.Context) {
+	teamName := ctx.Param("teamname")
+	res := do.dbCheck.CheckTeam(teamName)
 	if !res {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": res})
 		return
@@ -146,7 +152,10 @@ func (do Auth) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Wrong Password"})
 		return
 	}
-
+	if res := do.dbCheck.CheckUserType(do.login.UserName); res == "ADMIN" {
+		do.admin.Dashboard(ctx, do.login.UserName)
+		return
+	}
 	token, _, err := do.token.GenerateToken(do.login.UserName)
 	if err != nil {
 		fmt.Println("error at generating token:", err.Error())
@@ -175,10 +184,10 @@ func (do Auth) ForgotPassword(ctx *gin.Context) {
 			return
 		}
 		do.forgetPass.Phone = do.help.GetPhone(do.forgetPass.Username)
-		if err := do.twilio.SendOtp(do.forgetPass.Phone); err != nil {
-			ctx.Redirect(http.StatusInternalServerError, "/home")
-			return
-		}
+		// if err := do.twilio.SendOtp(do.forgetPass.Phone); err != nil {
+		// 	ctx.Redirect(http.StatusInternalServerError, "/home")
+		// 	return
+		// }
 		phone := do.help.NakeString(do.forgetPass.Phone)
 		ctx.JSON(http.StatusOK, gin.H{"status": true, "msg": "otp has send to your phone :" + phone})
 		return
@@ -187,33 +196,12 @@ func (do Auth) ForgotPassword(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "account using this number does'nt exist!"})
 		return
 	}
-	if err := do.twilio.SendOtp(do.forgetPass.Phone); err != nil {
-		ctx.Redirect(http.StatusInternalServerError, "/home")
-		return
-	}
+	// if err := do.twilio.SendOtp(do.forgetPass.Phone); err != nil {
+	// 	ctx.Redirect(http.StatusInternalServerError, "/home")
+	// 	return
+	// }
 	phone := do.help.NakeString(do.forgetPass.Phone)
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "msg": "otp has send to your phone :" + phone})
-}
-
-func (do Auth) VerifyForgetOtp(ctx *gin.Context) {
-	if err := ctx.BindJSON(&do.forOtp); err != nil {
-		ctx.JSON(http.StatusBadRequest, false)
-		return
-	}
-	if err := validate.Struct(do.forOtp); err != nil {
-		ctx.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-	res, err := do.twilio.CheckOtp(do.forOtp.Number, do.forOtp.Otp)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, false)
-		return
-	}
-	if !res {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": res, "msg": "otp is invalid !"})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"status": res, "msg": "otp successfully confirmed"})
 }
 
 func (do Auth) ChangePassword(ctx *gin.Context) {
@@ -225,9 +213,18 @@ func (do Auth) ChangePassword(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
+	res, err := do.twilio.CheckOtp(do.changePassword.Phone, do.changePassword.Otp)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, false)
+		return
+	}
+	if !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": res, "msg": "otp is invalid !"})
+		return
+	}
 	if err := do.UserDB.ChangePass(do.changePassword.Phone, do.changePassword.Password); err != nil {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, true)
+	ctx.JSON(http.StatusOK, gin.H{"result": "Password changed successfully"})
 }

@@ -56,6 +56,7 @@ func (s S3) UploadToS3(file *multipart.FileHeader, filename string) (string, err
 		Body:   data,
 	})
 	if err != nil {
+		fmt.Println(err.Error())
 		return "", err
 	}
 	location := s.res.Location

@@ -15,7 +15,9 @@ func Authroutes(incommingRoutes *gin.Engine) {
 	fmt.Println("authroutess")
 	incommingRoutes.GET("/home",auth.Home)
 	//	To check wheather the user exist or not
-	incommingRoutes.GET("/verify_user/:username", auth.CheckUser)
+	incommingRoutes.GET("/verifyuser/:username", auth.CheckUser)
+	incommingRoutes.GET("/verifyteam/:teamname", auth.CheckTeam)
+
 	//	To send otp to the given number 
 	incommingRoutes.POST("/phone_signup", auth.SendPhoneOTP)
 	//	To register a new user after checking the otp
@@ -24,8 +26,6 @@ func Authroutes(incommingRoutes *gin.Engine) {
 	incommingRoutes.POST("/login", auth.Login)
 	// 	To send otp for changing otp password
 	incommingRoutes.POST("/forgot_password", auth.ForgotPassword)
-	//	To check the otp for changing forget password
-	incommingRoutes.POST("/verify_forgetotp", auth.VerifyForgetOtp)
 	//	To change the new password
 	incommingRoutes.POST("/change_password", auth.ChangePassword)
 }
