@@ -3,7 +3,6 @@ package database
 import (
 	bycrypt "bootcamp_es/services/byCrypt"
 	"fmt"
-	"log"
 )
 
 type Check struct {
@@ -77,21 +76,24 @@ func (a Check) CheckUserType(username string) string {
 	row := Db.QueryRow(checkStmnt, username)
 	if err := row.Scan(&res); err != nil {
 		fmt.Println(err.Error())
-		log.Panic(err.Error())
 		return ""
 	}
 	return res
 }
 
-func (a Check) GetTeamFromLeader(leader string) string {
-	var teamName string
-	getTeam := `SELECT team_name FROM team_data WHERE leader = $1;`
-	row := Db.QueryRow(getTeam, leader)
-	if err := row.Scan(&teamName); err != nil {
-		log.Panic(err.Error())
-		return ""
+func (a Check) CheckUserPopularity(from, to string) bool {
+	var count string
+	stmnt := `SELECT count(id) FROM user_popularities WHERE provide = $1 AND consume = $2;`
+	row := Db.QueryRow(stmnt, from, to)
+	if err := row.Scan(&count); err != nil {
+		fmt.Println(err.Error(),from,to)
+		fmt.Println("error in checkuserPopularity")
+		return false
 	}
-	return teamName
+	if count != "1" {
+		return false
+	}
+	return true
 }
 
 func (a DBoperation) StartTransaction() {

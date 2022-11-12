@@ -29,7 +29,7 @@ func (g Get) GetUsername(phone string) string {
 
 // returns the new id after inserting dummy data into user_data
 func (g Get) GetNewAchievementName(user, content string) string {
-	var userId, val string
+	var userId, id string
 	transaction.StartTransaction()
 	getStmnt := `SELECT id FROM user_data WHERE username = $1;`
 	row := Db.QueryRow(getStmnt, user)
@@ -39,35 +39,29 @@ func (g Get) GetNewAchievementName(user, content string) string {
 		return ""
 	}
 
-	insertStmnt := `INSERT INTO user_achievements (content,data,user_id) VALUES ($1,$2,$3);`
-	_, err := Db.Exec(insertStmnt, content, "sample", userId)
-	if err != nil {
-		transaction.RollBackTransaction()
-		fmt.Println(err.Error())
+	insertStmnt := `INSERT INTO user_achievements (content,data,user_id) VALUES ($1,$2,$3) RETURNING id;`
+	val := Db.QueryRow(insertStmnt, content, "sample", userId)
+	if val.Err() != nil {
 		return ""
 	}
-	getStmnt = `SELECT id FROM user_achievements WHERE data = $1`
-	row = Db.QueryRow(getStmnt, "sample")
-	err = row.Scan(&val)
-	if err != nil {
-		transaction.RollBackTransaction()
-		fmt.Println(err.Error())
+	if err := val.Scan(&id); err != nil {
 		return ""
 	}
-	return val
+	return id
 }
 
 func (g Get) UserBio(user string) (
 	bool, model.UserProfileData) {
 	var userData model.UserProfileData
-	getBioData := `SELECT id,username,phone,email,bio,team,crew,popularity,created_at FROM user_data WHERE username = $1;`
+	getBioData := `SELECT id,username,phone,avatar,email,bio,team,crew,popularity,created_at FROM user_data WHERE username = $1;`
 	row := Db.QueryRow(getBioData, user)
 	if row.Err() != nil {
 		fmt.Println(row.Err())
 		return false, userData
 	}
-	err := row.Scan(&userData.Id, &userData.UserName, &userData.Phone, &userData.Email, &userData.Bio, &userData.Team, &userData.Crew, &userData.Popularity, &userData.Created_at)
+	err := row.Scan(&userData.Id, &userData.UserName, &userData.Phone, &userData.Avatar, &userData.Email, &userData.Bio, &userData.Team, &userData.Crew, &userData.Popularity, &userData.Created_at)
 	if err != nil {
+		log.Panic(err.Error())
 		fmt.Println(err.Error())
 	}
 	return true, userData
@@ -171,4 +165,15 @@ func (g Get) GetTeamName(data string) string {
 		return ""
 	}
 	return team
+}
+
+func (g Get) GetTeamFromLeader(leader string) string {
+	var teamName string
+	getTeam := `SELECT team_name FROM team_data WHERE leader = $1;`
+	row := Db.QueryRow(getTeam, leader)
+	if err := row.Scan(&teamName); err != nil {
+		fmt.Println(err.Error(),"getTeamLeader")
+		return ""
+	}
+	return teamName
 }

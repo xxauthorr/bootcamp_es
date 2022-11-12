@@ -30,41 +30,42 @@ func (j Jwt) loadEnv() (string, string, error) {
 	return key1, key2, nil
 }
 
-func (j Jwt) GenerateToken(userName string) (string, string, error) {
+func (j Jwt) GenerateToken(userName string) (string, int64, string, error) {
 
 	ACCESS_KEY, REFRESH_KEY, err := j.loadEnv()
 	if err != nil {
-		return "", "", err
+		return "", 0, "", err
 	}
 
 	claims := &SignedDetails{
 		User: userName,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(1)).Unix(),
+			ExpiresAt: time.Now().Local().Add(time.Minute * time.Duration(30)).Unix(),
 		},
 	}
 
 	refereshClaims := &SignedDetails{
+		User: userName,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(168)).Unix(),
 		},
 	}
-
+	expiresAt := time.Now().Local().Add(time.Hour * time.Duration(168)).Unix()
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(ACCESS_KEY))
 	if err != nil {
 		log.Panic(err.Error())
-		return "", "", err
+		return "", 0, "", err
 	}
 
 	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refereshClaims).SignedString([]byte(REFRESH_KEY))
 	if err != nil {
 		log.Panic(err.Error())
-		return "", "", err
+		return "", 0, "", err
 	}
-	return token, refreshToken, nil
+	return token, expiresAt, refreshToken, nil
 }
 
-func (j Jwt) ValidateAccessToken(AccessToken string) (claims *SignedDetails, msg string) {
+func (j Jwt) ValidateToken(AccessToken string) (claims *SignedDetails, msg string) {
 	ACCESS_KEY, _, err := j.loadEnv()
 	if err != nil {
 		log.Fatal(err)
@@ -134,6 +135,6 @@ func (j Jwt) ValidateRefreshToken(AccessToken string) (claims *SignedDetails, ms
 	return claims, msg
 }
 
-func UpdateTokens(signedToken string, signedRefreshToken string, userName string) {
-
-}
+// func UpdateTokens(signedToken string, signedRefreshToken string, userName string) {
+// 	var up dateObj primitive.D
+// }

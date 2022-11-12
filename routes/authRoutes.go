@@ -2,32 +2,37 @@ package routes
 
 import (
 	controller "bootcamp_es/controllers"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
-var auth controller.Auth
+type unAuth struct {
+	c    controller.Auth
+	user controller.User
+}
+
+var auth unAuth
 
 //	Contains all the routes that are used auth authorize the user or admin
 
 func Authroutes(incommingRoutes *gin.Engine) {
-	fmt.Println("authroutess")
-	incommingRoutes.GET("/home",auth.Home)
-	//	To check wheather the user exist or not
-	incommingRoutes.GET("/verifyuser/:username", auth.CheckUser)
-	incommingRoutes.GET("/verifyteam/:teamname", auth.CheckTeam)
+	incommingRoutes.GET("/", auth.c.Home)
+	incommingRoutes.GET("/:username", auth.user.UserProfile)
 
-	//	To send otp to the given number 
-	incommingRoutes.POST("/phone_signup", auth.SendPhoneOTP)
-	//	To register a new user after checking the otp
-	incommingRoutes.POST("/signup", auth.SignUp)
-	//	To login an existing user
-	incommingRoutes.POST("/login", auth.Login)
-	// 	To send otp for changing otp password
-	incommingRoutes.POST("/forgot_password", auth.ForgotPassword)
-	//	To change the new password
-	incommingRoutes.POST("/change_password", auth.ChangePassword)
+	//	To check wheather the user exist or not
+	incommingRoutes.GET("/verifyuser/:username", auth.c.CheckUser)
+	incommingRoutes.GET("/verifyteam/:teamname", auth.c.CheckTeam)
+	routes := incommingRoutes.Group("/auth")
+	routes.POST("/login", auth.c.Login)
+	routes.POST("/otp", auth.c.SendPhoneOTP)
+	routes.POST("/signup", auth.c.SignUp)
+	routes.POST("/forgotpassword", auth.c.ForgotPassword)
+	routes.POST("/changepassword", auth.c.ChangePassword)
+}
+
+func Profiles(incommingRoutes *gin.Engine) {
+	incommingRoutes.GET("/userprofile/:username", auth.c.UserProfile)
+	incommingRoutes.GET("/teamprofile/:username", auth.c.TeamProfile)
 }
 
 //	Contains all the routes that are used auth search an entity from the landing page
@@ -40,4 +45,3 @@ func Search(incommingRoutes *gin.Engine) {
 	// incommingRoutes.GET("/seach_entity", controller.GetEntityDetails)
 
 }
-

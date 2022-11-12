@@ -7,25 +7,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var Team string
-
-type Checkers struct {
+type AdminCheckers struct {
 	check database.Check
 }
+type TeamCheckers struct {
+	get database.Get
+}
 
-func (c Checkers) CheckUserType(ctx *gin.Context) {
-	if res := c.check.CheckUserType(TokenUser); res != "ADMIN" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Only Admin can Access!!"})
+func (c *AdminCheckers) CheckUserType(ctx *gin.Context) {
+	tokenUser := ctx.GetString("user")
+	if res := c.check.CheckUserType(tokenUser); res != "ADMIN" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Only Admin can Access!!"})
 		return
 	}
 	ctx.Next()
 }
 
-func (c Checkers) CheckLeaderTeam(ctx *gin.Context) {
-	Team = c.check.GetTeamFromLeader(TokenUser)
-	if Team == "" {
+func (c *TeamCheckers) CheckLeaderTeam(ctx *gin.Context) {
+	tokenUser := ctx.GetString("user")
+	team := c.get.GetTeamFromLeader(tokenUser)
+	if team == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "User Don't have a team"})
 		return
 	}
+	ctx.Set("team", team)
 	ctx.Next()
 }

@@ -49,6 +49,7 @@ func (s S3) UploadToS3(file *multipart.FileHeader, filename string) (string, err
 
 	uploader := s3manager.NewUploader(sess)
 
+	// change the fileheader to file
 	data, _ := file.Open()
 	s.res, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
@@ -63,4 +64,3 @@ func (s S3) UploadToS3(file *multipart.FileHeader, filename string) (string, err
 
 	return location, nil
 }
-

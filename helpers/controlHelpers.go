@@ -2,8 +2,8 @@ package helpers
 
 import (
 	"bootcamp_es/database"
-	"bootcamp_es/models"
 	"bootcamp_es/services/jwt"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,20 +33,36 @@ func (h Help) GetUsername(phone string) string {
 	return username
 }
 
-func (h Help) Authneticate(ctx *gin.Context) (bool, string) {
+func (h Help) Authorize(ctx *gin.Context) bool {
 	clientToken := ctx.Request.Header.Get("token")
 	if clientToken == "" {
-		return false, ""
+		clientRefreshToken := ctx.Request.Header.Get("refresh_token")
+		if clientRefreshToken == "" {
+			return false
+		}
+		claims, err := h.tokenCheck.ValidateRefreshToken(clientRefreshToken)
+		if err != "" {
+			fmt.Println(err)
+			if err == "signature is invalid" || err == "token is expired" {
+				return false
+			}
+			// should log the error
+			return false
+		}
+		ctx.Set("user", claims.User)
+		return true
 	}
-	// do like authenticate token
-	//ctx.Request.Header.Get("refresh_token")
-	claims, err := h.tokenCheck.ValidateAccessToken(clientToken)
+	claims, err := h.tokenCheck.ValidateToken(clientToken)
 	if err != "" {
-		return false, ""
+		fmt.Println(err, "error")
+		if err == "signature is invalid" || err == "token is expired" {
+			return false
+		}
+		// should log the error
+		return false
 	}
-
-	ctx.Set("username", claims.User)
-	return true, claims.User
+	ctx.Set("user", claims.User)
+	return true
 }
 
 func (h Help) NakeString(value string) string {
@@ -64,8 +80,8 @@ func (h Help) NakeString(value string) string {
 	return val
 }
 
-func (h Help) Search(data models.Search){
-	if data.Entity == "user"{
-		
-	}
-}
+// func (h Help) Search(data models.Search){
+// 	if data.Entity == "user"{
+
+// 	}
+// }

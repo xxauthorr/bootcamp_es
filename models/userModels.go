@@ -3,6 +3,7 @@ package models
 import "mime/multipart"
 
 type UserProfileData struct {
+	Liked             bool `json:"liked"`
 	Id                string
 	UserName          string
 	Phone             string
@@ -15,9 +16,43 @@ type UserProfileData struct {
 	Instagram         *string
 	Discord           *string
 	Whatsapp          *string
+	Avatar            *string
 	UserNotifications []Notification
 	UserAchievements  UserAchievements
 }
+
+type UserData struct {
+	Liked            bool   `json:"liked"`
+	UserName         string `json:"username"`
+	Phone            string
+	Popularity       string
+	Created_at       string
+	Email            *string
+	Bio              *string
+	Team             *string
+	Crew             *string
+	Instagram        *string
+	Discord          *string
+	Whatsapp         *string
+	Avatar           *string
+	UserAchievements UserAchievements
+}
+
+type UnAutResult struct {
+	User          UserData
+	Authorization Token
+}
+type AuthResult struct {
+	User          UserProfileData
+	Authorization Token
+}
+
+type UserPopularityUpdate struct {
+	From   string `json:"from" validate:"required"`
+	To     string `json:"to" validate:"required"`
+	Action string `json:"action" validate:"required"`
+}
+
 type Notification struct {
 	Id   string
 	Time string
@@ -59,4 +94,10 @@ type UserAchievementsDel struct {
 type UserNotification struct {
 	Id     string `json:"id" validate:"required"`
 	Action string `json:"action" validate:"required"`
+}
+
+type Token struct {
+	AccessToken  string
+	RefreshToken string
+	ExpiresAt    int64
 }

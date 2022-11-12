@@ -159,3 +159,39 @@ func (u User) DelNotification(id string) bool {
 	transaction.CommitTransaction()
 	return true
 }
+func (u User) AddPopularity(user, action string) bool {
+	transaction.StartTransaction()
+	if action == "true" {
+		updateStmnt := `UPDATE user_data SET popularity = popularity + 1 WHERE username = $1;`
+		if _, err := Db.Exec(updateStmnt, user); err != nil {
+			transaction.RollBackTransaction()
+			return false
+		}
+		return true
+	}
+	updateStmnt := `UPDATE user_data SET popularity = popularity - 1 WHERE username = $1;`
+	if _, err := Db.Exec(updateStmnt, user); err != nil {
+		transaction.RollBackTransaction()
+		return false
+	}
+	return true
+}
+
+func (u User) UpdatePopularityList(data model.UserPopularityUpdate) bool {
+	if data.Action == "true" {
+		stmnt := `INSERT INTO user_popularities (provide,consume) VALUES($1,$2);`
+		if _, err := Db.Exec(stmnt, data.From, data.To); err != nil {
+			transaction.RollBackTransaction()
+			return false
+		}
+		transaction.CommitTransaction()
+		return true
+	}
+	stmnt := `DELETE FROM user_popularities WHERE provide = $1 AND consume =$2;`
+	if _, err := Db.Exec(stmnt, data.From, data.To); err != nil {
+		transaction.RollBackTransaction()
+		return false
+	}
+	transaction.CommitTransaction()
+	return true
+}

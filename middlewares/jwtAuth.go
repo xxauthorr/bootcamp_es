@@ -13,53 +13,49 @@ type Mwares struct {
 	check database.Check
 }
 
-var TokenUser string
-
 func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 	clientToken := ctx.Request.Header.Get("token")
-	clientRefreshToken := ctx.Request.Header.Get("referesh_token")
 	if clientToken == "" {
-		ctx.Redirect(http.StatusFound, "/home")
-		ctx.Abort()
+		clientRefreshToken := ctx.Request.Header.Get("referesh_token")
+		if clientRefreshToken == "" {
+			ctx.JSON(http.StatusNonAuthoritativeInfo, gin.H{"status": false, "Message": "User must login to do the operation"})
+			return
+		}
+		claims, err := mw.jwt.ValidateToken(clientRefreshToken)
+		if err != "" {
+			if err == "signature is invalid" || err == "token is expired" {
+				ctx.Redirect(http.StatusPermanentRedirect, "/")
+				ctx.Abort()
+				return
+			}
+			ctx.Redirect(http.StatusPermanentRedirect, "/")
+			ctx.Abort()
+			return
+		}
+		ctx.Set("user", claims.User)
+		ctx.Next()
 		return
 	}
 
-	claims, err := mw.jwt.ValidateAccessToken(clientToken)
+	claims, err := mw.jwt.ValidateToken(clientToken)
 	if err != "" {
-		if err == "signature is invalid" {
-			ctx.Redirect(http.StatusPermanentRedirect, "/home")
+		if err == "signature is invalid" || err == "token is expired" {
+			ctx.Redirect(http.StatusPermanentRedirect, "/")
+			ctx.Abort()
 			return
 		}
-		if err == "token is expired" {
-			claims, err := mw.jwt.ValidateRefreshToken(clientRefreshToken)
-			if err != "" {
-				if err == "signature is invalid" {
-					ctx.Redirect(http.StatusPermanentRedirect, "/home")
-					return
-				}
-				if err == "token is expired" {
-					ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Refresh token expired, you must login"})
-					return
-				}
-				ctx.JSON(http.StatusOK, gin.H{"error": err})
-				return
-			}
-			TokenUser = claims.User
-			ctx.Set("username", claims.User)
-			ctx.Next()
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		ctx.Redirect(http.StatusPermanentRedirect, "/")
 		ctx.Abort()
 		return
 	}
-	TokenUser = claims.User
-	ctx.Set("username", claims.User)
+	ctx.Set("user", claims.User)
 	ctx.Next()
 }
 
 func (mw Mwares) CheckUserType(ctx *gin.Context) {
-	if res := mw.check.CheckUserType(TokenUser); res != "ADMIN" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Only Admin can Access!!"})
+	tokenUser := ctx.GetString("user")
+	if res := mw.check.CheckUserType(tokenUser); res != "ADMIN" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Only Admin Have Access!!"})
 		return
 	}
 	ctx.Next()

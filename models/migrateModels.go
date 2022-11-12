@@ -46,9 +46,11 @@ type Team_data struct {
 	Id        uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
 	Team_name string `gorm:"NOT NULL;UNIQUE"`
 	Leader    string `gorm:"NOT NULL;UNIQUE"`
+	Bio       string
 	Instagram string
 	Discord   string
 	Youtube   string
+	Avatar    string
 	Co_leader string `gorm:"UNIQUE"`
 }
 
@@ -59,9 +61,15 @@ type Team_achievement struct {
 	Data    string `gorm:"NOT NULL"`
 }
 
-type Team_notification struct{
+type Team_notification struct {
 	Id     uint64    `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
 	Player string    `gorm:"NOT NULL"`
 	Role   string    `gorm:"NOT NULL"`
 	Time   time.Time `gorm:"NOT NULL"`
+}
+
+type UserPopularity struct {
+	Id      uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
+	Provide string `gorm:"NOT NULL"`
+	Consume string `gorm:"NOT NULL"`
 }

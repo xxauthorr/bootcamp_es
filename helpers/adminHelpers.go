@@ -8,7 +8,7 @@ import (
 type AdminHelper struct {
 	db       database.Admin
 	entities models.Entities
-	check    database.Check
+	// check    database.Check
 }
 
 func (a AdminHelper) GetEntitiesCount() models.Entities {
@@ -19,14 +19,14 @@ func (a AdminHelper) GetEntitiesCount() models.Entities {
 	return a.entities
 }
 
-func (a AdminHelper) AdminSearch(search models.Search) (bool, models.Search) {
-	if search.Entity == "user" {
-		if res := a.check.CheckUser(search.Value); !res {
-			return false, search
-		}
-	}
-	if search.Entity == "team" {
+// func (a AdminHelper) AdminSearch(search models.Search) (bool, models.Search) {
+// 	if search.Entity == "user" {
+// 		if res := a.check.CheckUser(search.Value); !res {
+// 			return false, search
+// 		}
+// 	}
+// 	if search.Entity == "team" {
 
-	}
-	return true, search
-}
+// 	}
+// 	return true, search
+// }

@@ -4,7 +4,6 @@ import (
 	"bootcamp_es/database"
 	routes "bootcamp_es/routes"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -30,10 +29,6 @@ func main() {
 	routes.Team(router)
 	routes.User(router)
 	routes.Admin(router)
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusAccepted, gin.H{"msg": "connected"})
-	})
 
 	router.Run(":" + port)
 }
