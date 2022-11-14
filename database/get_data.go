@@ -1,7 +1,6 @@
 package database
 
 import (
-	"bootcamp_es/models"
 	model "bootcamp_es/models"
 	"fmt"
 	"log"
@@ -241,7 +240,7 @@ func (g Get) TopEntities() model.HomeData {
 	return data
 }
 
-func (g Get) GetFirstFive(data models.Search) (bool, []string) {
+func (g Get) GetFirstFive(data model.Search) (bool, []string) {
 	var value string
 	var values []string
 	data.Value = data.Value + "%"
