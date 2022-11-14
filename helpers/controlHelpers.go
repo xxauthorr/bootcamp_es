@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"bootcamp_es/database"
+	"bootcamp_es/models"
 	"bootcamp_es/services/jwt"
 	"fmt"
 
@@ -9,9 +10,9 @@ import (
 )
 
 type Help struct {
-	getUserDetails database.Get
-	check          database.Check
-	tokenCheck     jwt.Jwt
+	get        database.Get
+	check      database.Check
+	tokenCheck jwt.Jwt
 }
 
 func (h Help) GetPhone(username string) string {
@@ -20,7 +21,7 @@ func (h Help) GetPhone(username string) string {
 		return ""
 	}
 
-	phone := h.getUserDetails.GetPhoneNumber(username)
+	phone := h.get.GetPhoneNumber(username)
 	return phone
 }
 
@@ -29,7 +30,7 @@ func (h Help) GetUsername(phone string) string {
 	if !res {
 		return ""
 	}
-	username := h.getUserDetails.GetUsername(phone)
+	username := h.get.GetUsername(phone)
 	return username
 }
 
@@ -43,7 +44,7 @@ func (h Help) Authorize(ctx *gin.Context) bool {
 		claims, err := h.tokenCheck.ValidateRefreshToken(clientRefreshToken)
 		if err != "" {
 			fmt.Println(err)
-			if err == "signature is invalid" || err == "token is expired" {
+			if err == "signature is invalid" || err == "token expired" {
 				return false
 			}
 			// should log the error
@@ -55,7 +56,7 @@ func (h Help) Authorize(ctx *gin.Context) bool {
 	claims, err := h.tokenCheck.ValidateToken(clientToken)
 	if err != "" {
 		fmt.Println(err, "error")
-		if err == "signature is invalid" || err == "token is expired" {
+		if err == "signature is invalid" || err == "token expired" {
 			return false
 		}
 		// should log the error
@@ -80,8 +81,21 @@ func (h Help) NakeString(value string) string {
 	return val
 }
 
-// func (h Help) Search(data models.Search){
-// 	if data.Entity == "user"{
+func (h Help) GetToken(user string) models.Token {
+	var data models.Token
+	token, expiresAt, refreshToken, err := h.tokenCheck.GenerateToken(user)
+	if err != nil {
+		fmt.Println("error at generating token:", err.Error())
+	}
+	data.AccessToken = token
+	data.RefreshToken = refreshToken
+	data.ExpiresAt = expiresAt
+	return data
+}
 
-// 	}
-// }
+func (h Help) GetHomeData() models.HomeData {
+
+	data := h.get.TopEntities()
+	return data
+	// should return the banners and the youtube results
+}

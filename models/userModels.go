@@ -3,48 +3,45 @@ package models
 import "mime/multipart"
 
 type UserProfileData struct {
-	Liked             bool `json:"liked"`
-	Id                string
-	UserName          string
-	Phone             string
-	Popularity        string
-	Created_at        string
-	Email             *string
-	Bio               *string
-	Team              *string
-	Crew              *string
-	Instagram         *string
-	Discord           *string
-	Whatsapp          *string
-	Avatar            *string
-	UserNotifications []Notification
-	UserAchievements  UserAchievements
+	Visit             bool             `json:"visit"`
+	Liked             bool             `json:"liked"`
+	Id                string           `json:"id"`
+	UserName          string           `json:"username"`
+	Phone             string           `json:"phone"`
+	Popularity        int64            `json:"popularity"`
+	Created_at        string           `json:"created_at"`
+	Email             *string          `json:"email"`
+	Bio               *string          `json:"bio"`
+	Team              *string          `json:"team"`
+	Crew              *string          `json:"crew"`
+	Instagram         *string          `json:"instagram"`
+	Discord           *string          `json:"discord"`
+	Whatsapp          *string          `json:"whatsapp"`
+	Avatar            *string          `json:"avatar"`
+	UserNotifications []U_Notification `json:"user_notification"`
+	UserAchievements  UserAchievements `json:"user_achievements"`
 }
 
 type UserData struct {
-	Liked            bool   `json:"liked"`
-	UserName         string `json:"username"`
-	Phone            string
-	Popularity       string
-	Created_at       string
-	Email            *string
-	Bio              *string
-	Team             *string
-	Crew             *string
-	Instagram        *string
-	Discord          *string
-	Whatsapp         *string
-	Avatar           *string
-	UserAchievements UserAchievements
+	Liked            bool             `json:"liked"`
+	UserName         string           `json:"username"`
+	Phone            string           `json:"phone"`
+	Popularity       int64            `json:"popularity"`
+	Created_at       string           `json:"created_at"`
+	Email            *string          `json:"email"`
+	Bio              *string          `json:"bio"`
+	Team             *string          `json:"team"`
+	Crew             *string          `json:"crew"`
+	Instagram        *string          `json:"instagram"`
+	Discord          *string          `json:"discord"`
+	Whatsapp         *string          `json:"whatsapp"`
+	Avatar           *string          `json:"avatar"`
+	UserAchievements UserAchievements `json:"user_achievements"`
 }
 
-type UnAutResult struct {
-	User          UserData
-	Authorization Token
-}
 type AuthResult struct {
-	User          UserProfileData
-	Authorization Token
+	User          UserProfileData `json:"user"`
+	Authorization Token           `json:"authentication"`
 }
 
 type UserPopularityUpdate struct {
@@ -53,16 +50,16 @@ type UserPopularityUpdate struct {
 	Action string `json:"action" validate:"required"`
 }
 
-type Notification struct {
-	Id   string
-	Time string
-	Team string
-	Role string
+type U_Notification struct {
+	Id   string `json:"id"`
+	Time string `json:"time"`
+	Team string `json:"team"`
+	Role string `json:"role"`
 }
 
 type UserAchievements struct {
-	Ingame  []string
-	Tourney []string
+	Ingame  []string `json:"ingame"`
+	Tourney []string `json:"tounament"`
 }
 
 type UserBioEdit struct {
@@ -97,7 +94,7 @@ type UserNotification struct {
 }
 
 type Token struct {
-	AccessToken  string
-	RefreshToken string
-	ExpiresAt    int64
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresAt    int64  `json:"expires_at"`
 }

@@ -86,7 +86,7 @@ func (a Check) CheckUserPopularity(from, to string) bool {
 	stmnt := `SELECT count(id) FROM user_popularities WHERE provide = $1 AND consume = $2;`
 	row := Db.QueryRow(stmnt, from, to)
 	if err := row.Scan(&count); err != nil {
-		fmt.Println(err.Error(),from,to)
+		fmt.Println(err.Error(), from, to)
 		fmt.Println("error in checkuserPopularity")
 		return false
 	}
@@ -94,6 +94,20 @@ func (a Check) CheckUserPopularity(from, to string) bool {
 		return false
 	}
 	return true
+}
+
+func (a Check) CheckPopularityList(from, to string) bool {
+	var val int
+	stmnt := `SELECT count(id) FROM user_popularities WHERE provide = $1 AND consume = $2;`
+	row := Db.QueryRow(stmnt, from, to)
+	if err := row.Scan(&val); err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	if val == 0 {
+		return true
+	}
+	return false
 }
 
 func (a DBoperation) StartTransaction() {

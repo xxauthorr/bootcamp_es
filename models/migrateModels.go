@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type User_data struct {
 	Id         uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
@@ -13,7 +15,7 @@ type User_data struct {
 	User_type  string `gorm:"NOT NULL;CHECK:user_type = 'USER' OR user_type = 'ADMIN'"`
 	Crew       string
 	Role       string
-	Popularity string `gorm:"NOT NULL"`
+	Popularity int64 `gorm:"NOT NULL"`
 	Created_at time.Time
 	Updated_at time.Time
 	Block      bool `gorm:"NOT NULL"`
@@ -62,14 +64,36 @@ type Team_achievement struct {
 }
 
 type Team_notification struct {
-	Id     uint64    `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
-	Player string    `gorm:"NOT NULL"`
-	Role   string    `gorm:"NOT NULL"`
-	Time   time.Time `gorm:"NOT NULL"`
+	Id      uint64    `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
+	Team    string    `gorm:"NOT NULL"`
+	Player  string    `gorm:"NOT NULL"`
+	Request string    `gorm:"NOT NULL"`
+	Time    time.Time `gorm:"NOT NULL"`
 }
 
-type UserPopularity struct {
+type User_popularity struct {
 	Id      uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
 	Provide string `gorm:"NOT NULL"`
 	Consume string `gorm:"NOT NULL"`
+}
+
+type Tournament_data struct {
+	Id                int64  `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
+	Owner             string `gorm:"NOT NULL"`
+	Game              string `gorm:"NOT NULL"`
+	Tournament_name   string `gorm:"NOT NULL"`
+	Prize_pool        int32  `gorm:"NOT NULL"`
+	No_of_slots       int32  `gorm:"NOT NULL"`
+	Registration_ends string `gorm:"NOT NULL"`
+	T_start           string `gorm:"NOT NULL"`
+	T_end             string `gorm:"NOT NULL"`
+	Registration_link string `gorm:"NOT NULL"`
+	Live_stream       bool   `gorm:"NOT NULL"`
+	Discord           string
+	Banner            string
+	Prize_pool_banner string
+	Road_map          string
+	Manager           string
+	Sponser           string
+	Streamer          string
 }

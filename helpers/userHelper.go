@@ -7,11 +7,12 @@ import (
 )
 
 type UserHelper struct {
-	get  database.Get
-	user database.User
+	get   database.Get
+	user  database.User
+	check database.Check
 }
 
-func (u UserHelper) FetchProfileData(user string) models.UserProfileData {
+func (u UserHelper) FetchProfileData(user string, status bool) models.UserProfileData {
 	res, userData := u.get.UserBio(user)
 	if !res {
 		fmt.Println("error bio")
@@ -28,50 +29,16 @@ func (u UserHelper) FetchProfileData(user string) models.UserProfileData {
 		fmt.Println("error achievement")
 		return userData
 	}
-	res, userData = u.get.UserNotification(userData)
-	if !res {
-		fmt.Println("error notificatiion")
-		return userData
+	userData.Visit = false
+	if status {
+		userData.Visit = true
+		res, userData = u.get.UserNotification(userData)
+		if !res {
+			fmt.Println("error notificatiion")
+			return userData
+		}
 	}
 	return userData
-}
-
-func (u UserHelper) FetchUserData(user string) models.UserData {
-	var data models.UserData
-	res, userData := u.get.UserBio(user)
-	if !res {
-		fmt.Println("error bio")
-		return data
-	}
-	res, userData = u.get.UserSocial(userData)
-	if !res {
-		fmt.Println("error social")
-		return data
-	}
-
-	res, userData = u.get.UserAchievements(userData)
-	if !res {
-		fmt.Println("error achievement")
-		return data
-	}
-	data.UserName = userData.UserName
-	data.Avatar = userData.Avatar
-	data.Team = userData.Team
-	data.Crew = userData.Crew
-	data.Phone = userData.Phone
-	data.Bio = userData.Bio
-	data.Discord = userData.Discord
-	data.Instagram = userData.Instagram
-	data.Email = userData.Email
-	data.Created_at = userData.Created_at
-	data.Popularity = userData.Popularity
-	for i := range userData.UserAchievements.Ingame {
-		data.UserAchievements.Ingame = append(data.UserAchievements.Ingame, userData.UserAchievements.Ingame[i])
-	}
-	for i := range userData.UserAchievements.Tourney {
-		data.UserAchievements.Ingame = append(data.UserAchievements.Ingame, userData.UserAchievements.Tourney[i])
-	}
-	return data
 }
 
 func (u UserHelper) UpdateNotification(id, action string) bool {
@@ -88,10 +55,25 @@ func (u UserHelper) UpdateNotification(id, action string) bool {
 }
 
 func (u UserHelper) UpdatePopularity(data models.UserPopularityUpdate) bool {
-	if res := u.user.AddPopularity(data.To, data.Action); !res {
+	if data.Action == "true" {
+		res := u.check.CheckPopularityList(data.From, data.To)
+		if !res {
+			return true
+		}
+	}
+	if data.Action == "false" {
+		res := u.check.CheckPopularityList(data.From, data.To)
+		if res {
+			return true
+		}
+	}
+	if res := u.user.UpdatePopularity(data.To, data.Action); !res {
+		fmt.Println("err 1")
 		return res
 	}
 	if res := u.user.UpdatePopularityList(data); !res {
+		fmt.Println("err 2")
+
 		return res
 	}
 	return true

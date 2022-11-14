@@ -12,10 +12,11 @@ type Models struct {
 	user_achievement  models.User_achievement
 	user_notification models.User_notification
 	user_social       models.User_social
-	user_popularity   models.UserPopularity
+	user_popularity   models.User_popularity
 	team_data         models.Team_data
 	team_achievement  models.Team_achievement
 	team_notification models.Team_notification
+	tournament_data   models.Tournament_data
 }
 
 var migrate Models
@@ -46,6 +47,9 @@ func AutoMigrateTables(mig *gorm.DB) {
 		fmt.Println(err.Error())
 	}
 	if err := mig.AutoMigrate(&migrate.user_popularity); err != nil {
+		fmt.Println(err.Error())
+	}
+	if err := mig.AutoMigrate(&migrate.tournament_data); err != nil {
 		fmt.Println(err.Error())
 	}
 }

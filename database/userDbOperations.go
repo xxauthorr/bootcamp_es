@@ -159,11 +159,12 @@ func (u User) DelNotification(id string) bool {
 	transaction.CommitTransaction()
 	return true
 }
-func (u User) AddPopularity(user, action string) bool {
+func (u User) UpdatePopularity(user, action string) bool {
 	transaction.StartTransaction()
 	if action == "true" {
 		updateStmnt := `UPDATE user_data SET popularity = popularity + 1 WHERE username = $1;`
 		if _, err := Db.Exec(updateStmnt, user); err != nil {
+			fmt.Println(err.Error())
 			transaction.RollBackTransaction()
 			return false
 		}

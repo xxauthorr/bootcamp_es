@@ -13,9 +13,11 @@ import (
 
 type Team struct {
 	teamRegister models.TeamReg
-	// teamDb 		database.Team
-	checkDb database.Check
-	team    helpers.TeamHelper
+	teamDb       database.Team
+	checkDb      database.Check
+	team         helpers.TeamHelper
+	getHelp      helpers.Help
+	get          database.Get
 }
 type EditTeam struct {
 	edit                database.TeamProfileUpdate
@@ -26,24 +28,34 @@ type EditTeam struct {
 	transaction         database.DBoperation
 }
 
-func (t Team) TeamProfle(ctx *gin.Context) {
-	// teamname := ctx.Param("teamname")
-	// if teamname == "" {
-	// 	ctx.JSON(http.StatusNotFound, nil)
-	// 	return
-	// }
-	// if res := t.checkDb.CheckTeam(teamname); !res {
-	// 	ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "msg": "Team not found!"})
-	// 	return
-	// }
-	// teamData := t.teamDb.FetchTeamData(teamname)
-
+func (t Team) TeamProfile(ctx *gin.Context) {
+	teamname := ctx.Param("teamname")
+	if res := t.checkDb.CheckTeam(teamname); !res {
+		//team not found
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Team not found!", "result": nil})
+		return
+	}
+	user := ctx.GetString("user")
+	leader := t.get.GetTeamLeader(teamname)
+	teamData := t.teamDb.FetchTeamData(teamname)
+	teamData.Visit = true
+	if leader == user {
+		teamData = t.teamDb.FetchTeamNotification(teamData)
+		token := t.getHelp.GetToken(user)
+		teamData.Visit = false
+		teamData.Token = token
+		// show team data for the owner
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "successfully compelted", "result": teamData})
+		return
+	}
+	// show data for the client
+	ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": teamData})
 }
 
 func (t Team) RegisterTeam(ctx *gin.Context) {
 	user := ctx.GetString("user")
 	if err := ctx.BindJSON(&t.teamRegister); err != nil {
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	t.teamRegister.Username = user
@@ -62,7 +74,7 @@ func (t Team) RegisterTeam(ctx *gin.Context) {
 	//Team is registered and the notification to players are send
 	err := t.team.TeamScanAndInsert(t.teamRegister, user)
 	if err != nil {
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Team is succesfully registered"})
@@ -78,10 +90,10 @@ func (c EditTeam) TeamEditBio(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid entry !"})
 		return
 	}
-	location, err := c.bucket.UploadToS3(c.teamBioEdit.Avatar, "teamAvatar/"+c.teamBioEdit.TeamName+".jpg")
+	location, err := c.bucket.UploadToS3MultipartFileHeader(c.teamBioEdit.Avatar, "teamAvatar/"+c.teamBioEdit.TeamName+".jpg")
 	if err != nil {
 		//should log error
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	if res := c.edit.UpdateBio(c.teamBioEdit, location); !res {
@@ -92,14 +104,22 @@ func (c EditTeam) TeamEditBio(ctx *gin.Context) {
 }
 
 func (c EditTeam) TeamAddAchievements(ctx *gin.Context) {
-	fmt.Println("team add achievements")
+	content := ctx.Param("content")
 	if err := ctx.ShouldBind(&c.teamAddAchievements); err != nil {
 		fmt.Println(err.Error())
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	c.teamAddAchievements.TeamName = ctx.GetString("team")
-
+	if content == "tournament" {
+		c.teamAddAchievements.Content = "TOURNAMENT"
+	}
+	if content == "scrims" {
+		c.teamAddAchievements.Content = "SCRIMS"
+	} else {
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
+	}
 	if err := validate.Struct(c.teamAddAchievements); err != nil {
 		fmt.Println(err.Error())
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid entry !"})
@@ -107,19 +127,19 @@ func (c EditTeam) TeamAddAchievements(ctx *gin.Context) {
 	}
 	val := c.edit.GetAchievmentsName(c.teamAddAchievements)
 	if val == "" {
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	location, err := c.bucket.UploadToS3(c.teamAddAchievements.Data, "teamAchievements"+c.teamAddAchievements.TeamName+"_"+c.teamAddAchievements.Content+"_"+val+".jpg")
+	location, err := c.bucket.UploadToS3MultipartFileHeader(c.teamAddAchievements.Data, "/teamAchievements/"+c.teamAddAchievements.TeamName+"_"+c.teamAddAchievements.Content+"_"+val+".jpg")
 	if err != nil {
 		c.transaction.RollBackTransaction()
 		fmt.Println("s3 error")
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	res := c.edit.InsertTeamAchievements(location, val)
 	if !res {
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Achievements successfully inserted"})
@@ -129,7 +149,7 @@ func (c EditTeam) TeamDelAchievements(ctx *gin.Context) {
 	fmt.Println("team del ")
 	if err := ctx.BindJSON(&c.teamDelAchievements); err != nil {
 		fmt.Println("error in binding")
-		ctx.Redirect(http.StatusSeeOther, "/home")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	c.teamDelAchievements.TeamName = ctx.GetString("team")

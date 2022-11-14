@@ -37,7 +37,7 @@ func (c AdminControllers) Search(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "User Doesn't Exist!", "result": nil})
 			return
 		}
-		userData := c.userHelper.FetchUserData(c.search.Value)
+		userData := c.userHelper.FetchProfileData(c.search.Value, false)
 		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "successfully completed", "result": userData})
 		return
 	}

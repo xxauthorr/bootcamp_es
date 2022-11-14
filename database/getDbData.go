@@ -1,6 +1,7 @@
 package database
 
 import (
+	"bootcamp_es/models"
 	model "bootcamp_es/models"
 	"fmt"
 	"log"
@@ -138,7 +139,7 @@ func (g Get) UserAchievements(data model.UserProfileData) (bool, model.UserProfi
 }
 
 func (g Get) UserNotification(data model.UserProfileData) (bool, model.UserProfileData) {
-	var notification model.Notification
+	var notification model.U_Notification
 	getNotification := `SELECT id,team,role,time FROM user_notifications WHERE player = $1;`
 	rows, err := Db.Query(getNotification, data.UserName)
 	if err != nil {
@@ -167,13 +168,127 @@ func (g Get) GetTeamName(data string) string {
 	return team
 }
 
-func (g Get) GetTeamFromLeader(leader string) string {
+func (g Get) CheckTeamExist(leader string) string {
 	var teamName string
 	getTeam := `SELECT team_name FROM team_data WHERE leader = $1;`
 	row := Db.QueryRow(getTeam, leader)
 	if err := row.Scan(&teamName); err != nil {
-		fmt.Println(err.Error(),"getTeamLeader")
+		fmt.Println(err.Error(), "getTeamLeader")
 		return ""
 	}
 	return teamName
+}
+
+func (g Get) GetTeamLeader(team string) string {
+	var leader string
+	stmnt := `SELECT leader FROM team_data WHERE team_name = $1;`
+	row := Db.QueryRow(stmnt, team)
+	if err := row.Scan(&leader); err != nil {
+		fmt.Println(err.Error())
+		return ""
+	}
+	return leader
+}
+
+func (g Get) GetTeamStrength(team string) int {
+	var strength int
+	row := Db.QueryRow(`SELECT count(id) FROM user_data WHERE team = $1`, team)
+	if row.Err() != nil {
+		fmt.Println(row.Err().Error())
+		return 0
+	}
+	if err := row.Scan(&strength); err != nil {
+		fmt.Println(row.Err().Error())
+		return 0
+	}
+	return strength
+}
+
+func (g Get) TopEntities() model.HomeData {
+	var data model.HomeData
+	var player model.TopPlayers
+	var team model.TopTeams
+	stmnt := `SELECT username,popularity,team,avatar FROM user_data ORDER BY popularity ASC LIMIT 6;`
+	rows, err := Db.Query(stmnt)
+	if err != nil {
+		fmt.Println(err.Error())
+		return data
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&player.Player, &player.Popularity, &player.Team, &player.Avatar)
+		if err != nil {
+			fmt.Println(err.Error())
+			return data
+		}
+		data.Top_Players = append(data.Top_Players, player)
+	}
+	stmnt = `SELECT team_name,leader,avatar FROM team_data ORDER BY team_name ASC LIMIT 6;`
+	rows, err = Db.Query(stmnt)
+	if err != nil {
+		fmt.Println(err.Error())
+		return data
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&team.Team, &team.Leader, &team.Avatar)
+		if err != nil {
+			fmt.Println(err.Error())
+			return data
+		}
+		data.Top_teams = append(data.Top_teams, team)
+	}
+	return data
+}
+
+func (g Get) GetFirstFive(data models.Search) (bool, []string) {
+	var value string
+	var values []string
+	data.Value = data.Value + "%"
+	if data.Entity == "user" {
+		stmnt := `SELECT username FROM user_data WHERE username LIKE $1 LIMIT 5;`
+		rows, err := Db.Query(stmnt, data.Value)
+		if err != nil {
+			fmt.Println(err.Error())
+			return false, values
+		}
+		defer rows.Close()
+		for rows.Next() {
+			rows.Scan(&value)
+			values = append(values, value)
+		}
+		return true, values
+	}
+	if data.Entity == "team" {
+		stmnt := `SELECT team_name FROM team_data WHERE team_name LIKE $1 LIMIT 5;`
+		rows, err := Db.Query(stmnt, data.Value)
+		if err != nil {
+			fmt.Println(err.Error())
+			return false, values
+		}
+		defer rows.Close()
+		for rows.Next() {
+			rows.Scan(&value)
+			values = append(values, value)
+		}
+		return true, values
+	}
+	if data.Entity == "tournament" {
+		stmnt := `SELECT tournament_name FROM tournament_data WHERE tournament_name LIKE $1 LIMIT 5;`
+		rows, err := Db.Query(stmnt, data.Value)
+		if err != nil {
+			fmt.Println(err.Error())
+			return false, values
+		}
+		defer rows.Close()
+		for rows.Next() {
+			rows.Scan(&value)
+			values = append(values, value)
+		}
+		return true, values
+	}
+	// if data.Entity == "scrims" {
+
+	// }
+	return false, values
 }

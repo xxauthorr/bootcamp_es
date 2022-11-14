@@ -28,6 +28,7 @@ func main() {
 	routes.Authroutes(router)
 	routes.Team(router)
 	routes.User(router)
+	routes.Tournament(router)
 	routes.Admin(router)
 
 	router.Run(":" + port)

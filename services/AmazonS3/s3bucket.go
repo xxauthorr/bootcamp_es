@@ -29,7 +29,7 @@ func (s S3) GetBucketName() string {
 	return BUCKET
 }
 
-func (s S3) UploadToS3(file *multipart.FileHeader, filename string) (string, error) {
+func (s S3) UploadToS3MultipartFileHeader(file *multipart.FileHeader, filename string) (string, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: "default",
 		Config: aws.Config{
@@ -58,6 +58,41 @@ func (s S3) UploadToS3(file *multipart.FileHeader, filename string) (string, err
 	})
 	if err != nil {
 		fmt.Println(err.Error())
+		return "", err
+	}
+	location := s.res.Location
+
+	return location, nil
+}
+
+func (s S3) UploadToS3MultipartFile(file multipart.File, filename string) (string, error) {
+	sess, err := session.NewSessionWithOptions(session.Options{
+		Profile: "default",
+		Config: aws.Config{
+			Region: aws.String("ap-south-1"),
+		},
+	})
+
+	if err != nil {
+		fmt.Printf("Failed to initialize new session: %v", err)
+		return "", errors.New("error in Initializing S3 bucket")
+	}
+
+	bucketName := s.GetBucketName()
+	if bucketName == "" {
+		return "", errors.New("error in getting env")
+	}
+
+	uploader := s3manager.NewUploader(sess)
+
+	// change the fileheader to file
+	s.res, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(filename),
+		Body:   file,
+	})
+	if err != nil {
+		fmt.Println(err.Error(),"error here")
 		return "", err
 	}
 	location := s.res.Location

@@ -7,11 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var ()
-
 type team struct {
 	cTeamEdit   controllers.EditTeam
-	teamChecker middlewares.TeamCheckers
+	teamMwares middlewares.TeamCheckers
 	mw          middlewares.Mwares
 }
 
@@ -19,8 +17,8 @@ var te team
 
 func Team(incommingRoutes *gin.Engine) {
 	routes := incommingRoutes.Group("/team")
-	routes.Use(te.mw.AuthneticateToken, te.teamChecker.CheckLeaderTeam)
+	routes.Use(te.mw.AuthneticateToken, te.teamMwares.CheckLeaderTeam)
 	routes.PUT("/editbio", te.cTeamEdit.TeamEditBio)
-	routes.PUT("/addachievements", te.cTeamEdit.TeamAddAchievements)
+	routes.PUT("/addachievements/:content", te.cTeamEdit.TeamAddAchievements)
 	routes.DELETE("/delachievements", te.cTeamEdit.TeamDelAchievements)
 }

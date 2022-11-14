@@ -24,7 +24,9 @@ type Auth struct {
 	forgetPass     models.ForgetPassword
 	changePassword models.ChangePassword
 	tokenResult    models.Token
+	search         models.Search
 	dbCheck        database.Check
+	get            database.Get
 	UserDB         database.User
 	help           helpers.Help
 	twilio         twilio.Do
@@ -55,18 +57,17 @@ func (c Auth) CheckTeam(ctx *gin.Context) {
 
 func (c Auth) Home(ctx *gin.Context) {
 	status := c.help.Authorize(ctx)
+	homeData := c.help.GetHomeData()
 	if !status {
 		// for not logged in users
-		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Not logged in", "result": nil})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Not logged in", "result": homeData})
 		return
 	}
 	// for logged in users
 	user := ctx.GetString("user")
-	token, expiresAt, refreshToken, _ := c.jwt.GenerateToken(user)
-	c.tokenResult.AccessToken = token
-	c.tokenResult.ExpiresAt = expiresAt
-	c.tokenResult.RefreshToken = refreshToken
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request succesfully completed", "result": c.tokenResult})
+	token := c.help.GetToken(user)
+	homeData.Authorization = token
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request succesfully completed", "result": homeData})
 }
 
 // otp is send to the given phone number and return the phone and the status true
@@ -229,9 +230,23 @@ func (c Auth) ChangePassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusBadRequest, gin.H{"status": true, "message": "Password succesfully changed !"})
 }
 
-func (c Auth) UserProfile(ctx *gin.Context) {
 
-}
-func (c Auth) TeamProfile(ctx *gin.Context) {
-
+func (c Auth) SearchFirstFive(ctx *gin.Context) {
+	entity := ctx.Param("entity")
+	if err := ctx.BindJSON(&c.search); err != nil {
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+	c.search.Entity = entity
+	if err := validate.Struct(c.search); err != nil {
+		fmt.Println(err.Error())
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid entry !"})
+		return
+	}
+	res, data := c.get.GetFirstFive(c.search)
+	if !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid params", "result": nil})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request completed successfully", "result": data})
 }

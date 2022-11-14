@@ -26,3 +26,25 @@ type Search struct {
 	Entity string `json:"entity" validate:"required"`
 	Value  string `json:"value" validate:"required,max=25"`
 }
+
+type HomeData struct {
+	User          string       `json:"user"`
+	Banner        string       `json:"banner"`
+	Top_Players   []TopPlayers `json:"players"`
+	Top_teams     []TopTeams   `json:"teams"`
+	Authorization Token        `json:"authorization"`
+}
+
+type TopPlayers struct {
+	Player     string `json:"name"`
+	Avatar     *string `json:"avatar"`
+	Team       *string `json:"team"`
+	Popularity string `json:"popularity"`
+}
+
+type TopTeams struct {
+	Team       string `json:"team"`
+	Avatar     *string `json:"avatar"`
+	Leader     string `json:"leader"`
+	Popularity string `json:"popularity"`
+}

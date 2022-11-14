@@ -5,7 +5,6 @@ import (
 	"bootcamp_es/helpers"
 	"bootcamp_es/models"
 	amazons3 "bootcamp_es/services/AmazonS3"
-	"bootcamp_es/services/jwt"
 	"fmt"
 	"net/http"
 
@@ -28,13 +27,11 @@ type UserEdit struct {
 }
 
 type User struct {
-	check        database.Check
-	help         helpers.UserHelper
-	auth         helpers.Help
-	tokenResult  models.Token
-	UnAuthResult models.UnAutResult
-	AuthResult   models.AuthResult
-	jwt          jwt.Jwt
+	check      database.Check
+	help       helpers.UserHelper
+	getHelp    helpers.Help
+	auth       helpers.Help
+	AuthResult models.AuthResult
 }
 
 func (user User) UserProfile(ctx *gin.Context) {
@@ -44,36 +41,44 @@ func (user User) UserProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusFound, gin.H{"status": status, "message": "User not found", "result": nil})
 		return
 	}
-	data := user.help.FetchUserData(username)
-	if res := user.auth.Authorize(ctx); !res {
-		data.Liked = false
-		user.UnAuthResult.User = data
-		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.UnAuthResult})
-		return
-	}
+	res := user.auth.Authorize(ctx)
 	client := ctx.GetString("user")
-	if username == client {
-		data := user.help.FetchProfileData(client)
+	if username == client && res {
+		data := user.help.FetchProfileData(client, true)
 		data.Liked = user.check.CheckUserPopularity(username, client)
+		data.Visit = false
 		user.AuthResult.User = data
 		//update token
-		token, expiresAt, refreshToken, err := user.jwt.GenerateToken(client)
-		if err != nil {
-			fmt.Println("error at generating token:", err.Error())
-		}
-		user.tokenResult.AccessToken = token
-		user.tokenResult.ExpiresAt = expiresAt
-		user.tokenResult.RefreshToken = refreshToken
-		user.AuthResult.Authorization = user.tokenResult
-		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult, "same": true})
+		token := user.getHelp.GetToken(client)
+		user.AuthResult.Authorization = token
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
 		return
 	}
+	data := user.help.FetchProfileData(username, false)
+	if !res {
+		data.Visit = true
+		data.Liked = true
+		user.AuthResult.User = data
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
+		return
+	}
+	data.Liked = user.check.CheckUserPopularity(username, client)
+	data.Visit = true
+	user.AuthResult.User = data
 	//update token
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": data})
+	token := user.getHelp.GetToken(client)
+	user.AuthResult.Authorization = token
+	//update token
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
 }
 
 func (edit UserEdit) UserPopularityEdit(ctx *gin.Context) {
 	user := ctx.GetString("user")
+	to := ctx.Param("to")
+	if res := edit.check.CheckUser(to); !res {
+		ctx.JSON(http.StatusSeeOther, gin.H{"status": false, "message": "Invalid params", "result": nil})
+		return
+	}
 	if res := edit.check.CheckUser(user); !res {
 		ctx.JSON(http.StatusSeeOther, gin.H{"status": false, "message": "Invalid token claims", "result": nil})
 		return
@@ -82,7 +87,11 @@ func (edit UserEdit) UserPopularityEdit(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !"})
 		return
 	}
+	edit.popularityUpdate.To = to
 	edit.popularityUpdate.From = user
+	if err := validate.Struct(edit.popularityUpdate); err != nil {
+		fmt.Println("error in validate")
+	}
 	if res := edit.help.UpdatePopularity(edit.popularityUpdate); !res {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
@@ -91,6 +100,7 @@ func (edit UserEdit) UserPopularityEdit(ctx *gin.Context) {
 }
 
 func (edit UserEdit) BioEdit(ctx *gin.Context) {
+	fmt.Println("bio edit ")
 	user := ctx.GetString("user")
 	if res := edit.check.CheckUser(user); !res {
 		ctx.JSON(http.StatusSeeOther, gin.H{"status": false, "message": "Invalid token claims", "result": nil})
@@ -106,7 +116,7 @@ func (edit UserEdit) BioEdit(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !"})
 		return
 	}
-	avatar, err := edit.s3.UploadToS3(edit.userBioData.Avatar, "userAvatar/"+user+".jpg")
+	avatar, err := edit.s3.UploadToS3MultipartFileHeader(edit.userBioData.Avatar, "userAvatar/"+user+".jpg")
 	if err != nil {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
@@ -140,7 +150,7 @@ func (edit UserEdit) UserAddAcheivements(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	location, err := edit.s3.UploadToS3(edit.userAddAchievements.Data, "userAchievements/"+user+"_"+edit.userAddAchievements.Content+"_"+val+".jpg")
+	location, err := edit.s3.UploadToS3MultipartFileHeader(edit.userAddAchievements.Data, "userAchievements/"+user+"_"+edit.userAddAchievements.Content+"_"+val+".jpg")
 	if err != nil {
 		edit.transaction.RollBackTransaction()
 		ctx.Redirect(http.StatusSeeOther, "/")

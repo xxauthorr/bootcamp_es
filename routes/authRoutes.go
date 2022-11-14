@@ -8,6 +8,7 @@ import (
 
 type unAuth struct {
 	c    controller.Auth
+	team controller.Team
 	user controller.User
 }
 
@@ -18,6 +19,9 @@ var auth unAuth
 func Authroutes(incommingRoutes *gin.Engine) {
 	incommingRoutes.GET("/", auth.c.Home)
 	incommingRoutes.GET("/:username", auth.user.UserProfile)
+	incommingRoutes.GET("/teamprofile/:teamname", auth.team.TeamProfile)
+	incommingRoutes.GET("/searchfive/:entity", auth.c.SearchFirstFive)
+	
 
 	//	To check wheather the user exist or not
 	incommingRoutes.GET("/verifyuser/:username", auth.c.CheckUser)
@@ -28,20 +32,4 @@ func Authroutes(incommingRoutes *gin.Engine) {
 	routes.POST("/signup", auth.c.SignUp)
 	routes.POST("/forgotpassword", auth.c.ForgotPassword)
 	routes.POST("/changepassword", auth.c.ChangePassword)
-}
-
-func Profiles(incommingRoutes *gin.Engine) {
-	incommingRoutes.GET("/userprofile/:username", auth.c.UserProfile)
-	incommingRoutes.GET("/teamprofile/:username", auth.c.TeamProfile)
-}
-
-//	Contains all the routes that are used auth search an entity from the landing page
-
-func Search(incommingRoutes *gin.Engine) {
-	// To list the user,teams,tournaments,scrims (if any)
-	// incommingRoutes.GET("/list_entity", controller.ListEntity)
-
-	//To get the details of the details of the entity
-	// incommingRoutes.GET("/seach_entity", controller.GetEntityDetails)
-
 }

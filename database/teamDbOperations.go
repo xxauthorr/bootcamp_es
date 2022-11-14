@@ -37,8 +37,57 @@ func (t Team) InsertTeam(team models.TeamReg, user string) error {
 	return nil
 }
 
-func (t Team) FetchTeamData(team string) {
+func (t Team) FetchTeamData(team string) models.TeamData {
 	//  do it after the team edit
+	var data models.TeamData
+	var (
+		value, content string
+		id             int64
+	)
+	stmnt := `SELECT id,team_name,leader,bio,instagram,discord,youtube,avatar,co_leader FROM team_data WHERE team_name = $1;`
+	row := Db.QueryRow(stmnt, team)
+	if err := row.Scan(&id, &data.TeamName, &data.Leader, &data.Bio, &data.Instagram, &data.Discord, &data.Youtube, &data.Avatar, &data.Co_leader); err != nil {
+		fmt.Println(err.Error())
+		return data
+	}
+	stmnt = `SELECT content,data FROM team_achievements WHERE team_id = $1;`
+	rows, err := Db.Query(stmnt, id)
+	if err != nil {
+		fmt.Println(err.Error())
+		return data
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := row.Scan(&content, &value); err != nil {
+			fmt.Println(err.Error())
+			return data
+		}
+		if content == "TOURNAMENT" {
+			data.Achievements.Tournaments = append(data.Achievements.Tournaments, value)
+		} else {
+			data.Achievements.Scrims = append(data.Achievements.Scrims, value)
+		}
+	}
+	return data
+}
+
+func (t Team) FetchTeamNotification(data models.TeamData) models.TeamData {
+	var value models.TeamNotification
+	stmnt := `SELECT id,time,request,player FROM team_notifications WHERE team = $1;`
+	rows, err := Db.Query(stmnt, data.TeamName)
+	if err != nil {
+		fmt.Println(err.Error())
+		return data
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.Scan(&value.Id, &value.Time, &value.Request, &value.Player); err != nil {
+			fmt.Println(err.Error())
+			return data
+		}
+		data.Notifications = append(data.Notifications, value)
+	}
+	return data
 }
 
 func (t TeamProfileUpdate) GetAchievmentsName(data models.TeamAchievementsAdd) string {

@@ -19,16 +19,17 @@ func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 		clientRefreshToken := ctx.Request.Header.Get("referesh_token")
 		if clientRefreshToken == "" {
 			ctx.JSON(http.StatusNonAuthoritativeInfo, gin.H{"status": false, "Message": "User must login to do the operation"})
+			ctx.Abort()
 			return
 		}
 		claims, err := mw.jwt.ValidateToken(clientRefreshToken)
 		if err != "" {
-			if err == "signature is invalid" || err == "token is expired" {
-				ctx.Redirect(http.StatusPermanentRedirect, "/")
+			if err == "signature is invalid" || err == "token expired" {
+				ctx.Redirect(http.StatusSeeOther, "/")
 				ctx.Abort()
 				return
 			}
-			ctx.Redirect(http.StatusPermanentRedirect, "/")
+			ctx.Redirect(http.StatusSeeOther, "/")
 			ctx.Abort()
 			return
 		}
@@ -39,12 +40,12 @@ func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 
 	claims, err := mw.jwt.ValidateToken(clientToken)
 	if err != "" {
-		if err == "signature is invalid" || err == "token is expired" {
-			ctx.Redirect(http.StatusPermanentRedirect, "/")
+		if err == "signature is invalid" || err == "token expired" {
+			ctx.Redirect(http.StatusSeeOther, "/")
 			ctx.Abort()
 			return
 		}
-		ctx.Redirect(http.StatusPermanentRedirect, "/")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		ctx.Abort()
 		return
 	}

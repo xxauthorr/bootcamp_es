@@ -14,12 +14,30 @@ type TeamReg struct {
 }
 
 type TeamData struct {
-	TeamName  string
-	Leader    string
-	Co_leader string
-	Instagram string
-	Youtube   string
-	Discord   string
+	Visit         bool
+	TeamName      string
+	Leader        string
+	Co_leader     *string
+	Bio           *string
+	Avatar        *string
+	Instagram     *string
+	Youtube       *string
+	Discord       *string
+	Achievements  TeamAchievements
+	Notifications []TeamNotification
+	Token         Token
+}
+
+type TeamAchievements struct {
+	Scrims      []string
+	Tournaments []string
+}
+
+type TeamNotification struct {
+	Id      int64
+	Player  string
+	Request string
+	Time    string
 }
 
 type TeamAchievementsAdd struct {
