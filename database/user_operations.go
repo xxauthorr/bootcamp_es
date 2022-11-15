@@ -44,9 +44,15 @@ func (u User) ChangePass(data, password string) error {
 }
 
 func (u User) UpdateBio(data model.UserBioEdit, avatar string) error {
+	var err error
 	updated_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updateStmnt := "UPDATE user_data SET bio = $1,crew = $2,role = $3,avatar = $4,updated_at = $5 WHERE username = $6;"
-	_, err := Db.Exec(updateStmnt, data.Bio, data.Crew, data.Role, avatar, updated_at, data.UserName)
+	if avatar != "" {
+		updateStmnt := `UPDATE user_data SET bio = $1,crew = $2,role = $3,avatar = $4,updated_at = $5 WHERE username = $6;`
+		_, err = Db.Exec(updateStmnt, data.Bio, data.Crew, data.Role, avatar, updated_at, data.UserName)
+	} else {
+		updateStmnt := `UPDATE user_data SET bio = $1,crew = $2,role = $3,updated_at = $4 WHERE username = $5;`
+		_, err = Db.Exec(updateStmnt, data.Bio, data.Crew, data.Role, updated_at, data.UserName)
+	}
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -136,6 +142,14 @@ func (u User) UpdateNotification(id string) bool {
 		fmt.Println(err.Error())
 		return false
 	}
+	if role == "Co-Leader" {
+		updateTeamData := `UPDATE team_data SET co_leader = $1 WHERE team_name = $2;`
+		if _, err := Db.Exec(updateTeamData, user, team); err != nil {
+			transaction.RollBackTransaction()
+			fmt.Println(err.Error())
+			return false
+		}
+	}
 	delNotification := `DELETE FROM user_notifications WHERE id = $1`
 	Db.Exec(delNotification, id)
 	if _, err := Db.Exec(delNotification, id); err != nil {
@@ -194,5 +208,16 @@ func (u User) UpdatePopularityList(data model.UserPopularityUpdate) bool {
 		return false
 	}
 	transaction.CommitTransaction()
+	return true
+}
+
+func (u User) InsertTeamNotification(player, team, req string) bool {
+	time, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	stmtn := `INSERT INTO team_notifications(team,player,request,time) VALUES($1,$2,$3,$4);`
+	_, err := Db.Exec(stmtn, team, player, req, time)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
 	return true
 }

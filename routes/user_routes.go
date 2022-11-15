@@ -24,9 +24,10 @@ func User(incommingRoutes *gin.Engine) {
 	route.PUT("/editsocial", us.edit.UserSocialEdit)
 	route.PUT("/addachievements", us.edit.UserAddAcheivements)
 	route.DELETE("/delachievements", us.edit.UserDelAcheivements)
-	route.PUT("/updatenotification", us.edit.UpdateNotification)
+	route.PUT("/updatenotification/:action", us.edit.UpdateNotification)
 	route.POST("/teamregistration", us.cTeam.RegisterTeam)
 	route.PUT("/userpops/:to", us.edit.UserPopularityEdit)
+	route.PUT("/teamrequest/:team", us.edit.SendTeamJoinRequest)
 }
 
 // Contains all the routes to edit the control settings (password,email,phone)

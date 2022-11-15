@@ -20,7 +20,7 @@ type UserEdit struct {
 	userAddAchievements models.UserAchievementsAdd
 	userDelAchievements models.UserAchievementsDel
 	userSocial          models.UserSocialEdit
-	userNotification    models.UserNotification
+	userNotification    models.Notification
 	popularityUpdate    models.UserPopularityUpdate
 	help                helpers.UserHelper
 	s3                  amazons3.S3
@@ -45,7 +45,7 @@ func (user User) UserProfile(ctx *gin.Context) {
 	client := ctx.GetString("user")
 	if username == client && res {
 		data := user.help.FetchProfileData(client, true)
-		data.Liked = user.check.CheckUserPopularity(username, client)
+		data.Liked = user.check.CheckUserPopularity(client, username)
 		data.Visit = false
 		user.AuthResult.User = data
 		//update token
@@ -57,12 +57,12 @@ func (user User) UserProfile(ctx *gin.Context) {
 	data := user.help.FetchProfileData(username, false)
 	if !res {
 		data.Visit = true
-		data.Liked = true
+		data.Liked = false
 		user.AuthResult.User = data
 		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
 		return
 	}
-	data.Liked = user.check.CheckUserPopularity(username, client)
+	data.Liked = user.check.CheckUserPopularity(client, username)
 	data.Visit = true
 	user.AuthResult.User = data
 	//update token
@@ -90,17 +90,17 @@ func (edit UserEdit) UserPopularityEdit(ctx *gin.Context) {
 	edit.popularityUpdate.To = to
 	edit.popularityUpdate.From = user
 	if err := validate.Struct(edit.popularityUpdate); err != nil {
-		fmt.Println("error in validate")
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !"})
+		return
 	}
 	if res := edit.help.UpdatePopularity(edit.popularityUpdate); !res {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed"})
 }
 
 func (edit UserEdit) BioEdit(ctx *gin.Context) {
-	fmt.Println("bio edit ")
 	user := ctx.GetString("user")
 	if res := edit.check.CheckUser(user); !res {
 		ctx.JSON(http.StatusSeeOther, gin.H{"status": false, "message": "Invalid token claims", "result": nil})
@@ -116,12 +116,21 @@ func (edit UserEdit) BioEdit(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !"})
 		return
 	}
-	avatar, err := edit.s3.UploadToS3MultipartFileHeader(edit.userBioData.Avatar, "userAvatar/"+user+".jpg")
-	if err != nil {
-		ctx.Redirect(http.StatusSeeOther, "/")
+
+	if _, ProfilePicture, _ := ctx.Request.FormFile("avatar"); ProfilePicture != nil {
+		avatar, err := edit.s3.UploadToS3MultipartFileHeader(ProfilePicture, "userAvatar/"+user+".jpg")
+		if err != nil {
+			ctx.Redirect(http.StatusSeeOther, "/")
+			return
+		}
+		if err := edit.update.UpdateBio(edit.userBioData, avatar); err != nil {
+			ctx.JSON(http.StatusInternalServerError, false)
+			return
+		}
+		ctx.Redirect(http.StatusSeeOther, "/"+user)
 		return
 	}
-	if err := edit.update.UpdateBio(edit.userBioData, avatar); err != nil {
+	if err := edit.update.UpdateBio(edit.userBioData, ""); err != nil {
 		ctx.JSON(http.StatusInternalServerError, false)
 		return
 	}
@@ -214,12 +223,18 @@ func (edit UserEdit) UserSocialEdit(ctx *gin.Context) {
 
 func (edit UserEdit) UpdateNotification(ctx *gin.Context) {
 	user := ctx.GetString("user")
+	action := ctx.Param("action")
 	if err := ctx.BindJSON(&edit.userNotification); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !", "result": nil})
 		return
 	}
+	edit.userNotification.Action = action
 	if err := validate.Struct(edit.userNotification); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !", "result": nil})
+		return
+	}
+	if status := edit.check.CheckUserHasClan(user); status {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "user is already in a clan"})
 		return
 	}
 	res := edit.help.UpdateNotification(edit.userNotification.Id, edit.userNotification.Action)
@@ -228,6 +243,20 @@ func (edit UserEdit) UpdateNotification(ctx *gin.Context) {
 		return
 	}
 	ctx.Redirect(http.StatusSeeOther, "/"+user)
+}
+
+func (edit UserEdit) SendTeamJoinRequest(ctx *gin.Context) {
+	team := ctx.Param("team")
+	user := ctx.GetString("user")
+	if res := edit.check.CheckUserHasClan(user); res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"result": false, "message": "User is already in a clan"})
+		return
+	}
+	if res := edit.update.InsertTeamNotification(user, team, "join clan"); !res {
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed"})
 }
 
 func (edit UserEdit) UserChangePassword(ctx *gin.Context) {

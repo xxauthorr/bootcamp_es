@@ -17,7 +17,7 @@ var t tournament
 
 func Tournament(incommingRoutes *gin.Engine) {
 	routes := incommingRoutes.Group("tournament")
-	routes.Use(t.mw.AuthneticateToken, t.check.CheckLeaderTeam,t.check.CheckTeamStrength)
-	// routes.Use(t.mw.AuthneticateToken, t.check.CheckLeaderTeam)
+	// routes.Use(t.mw.AuthneticateToken, t.check.CheckLeaderTeam,t.check.CheckTeamStrength)
+	routes.Use(t.mw.AuthneticateToken, t.check.CheckLeaderTeam)
 	routes.POST("/registration", t.controller.TournamentRegistration)
 }

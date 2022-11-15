@@ -8,9 +8,9 @@ import (
 )
 
 type team struct {
-	cTeamEdit   controllers.EditTeam
+	cTeamEdit  controllers.EditTeam
 	teamMwares middlewares.TeamCheckers
-	mw          middlewares.Mwares
+	mw         middlewares.Mwares
 }
 
 var te team
@@ -21,4 +21,5 @@ func Team(incommingRoutes *gin.Engine) {
 	routes.PUT("/editbio", te.cTeamEdit.TeamEditBio)
 	routes.PUT("/addachievements/:content", te.cTeamEdit.TeamAddAchievements)
 	routes.DELETE("/delachievements", te.cTeamEdit.TeamDelAchievements)
+	routes.PUT("/updatenotification/:action", te.cTeamEdit.UpdateTeamNotification)
 }

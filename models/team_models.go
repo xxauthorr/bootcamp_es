@@ -57,5 +57,4 @@ type TeamBioEdit struct {
 	Instagram string                `form:"instagram"`
 	Discord   string                `form:"discord"`
 	Youtube   string                `form:"youtube"`
-	Avatar    *multipart.FileHeader `form:"avatar" binding:"required"`
 }

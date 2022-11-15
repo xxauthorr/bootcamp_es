@@ -20,6 +20,7 @@ func (db Tournament) RegisterTournament(data models.Tournament_registration_data
 		return false, 0
 	}
 	if err := rows.Scan(&id); err != nil {
+		fmt.Println("error in returning")
 		fmt.Println(err.Error())
 		return false, 0
 	}

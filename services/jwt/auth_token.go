@@ -30,17 +30,17 @@ func (j Jwt) loadEnv() (string, string, error) {
 	return key1, key2, nil
 }
 
-func (j Jwt) GenerateToken(userName string) (string, int64, string, error) {
+func (j Jwt) GenerateToken(userName string) (string, string, string, error) {
 
 	ACCESS_KEY, REFRESH_KEY, err := j.loadEnv()
 	if err != nil {
-		return "", 0, "", err
+		return "", "", "", err
 	}
-
+	t := time.Now().Local().Add(time.Minute * time.Duration(30))
 	claims := &SignedDetails{
 		User: userName,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Minute * time.Duration(30)).Unix(),
+			ExpiresAt: t.Unix(),
 		},
 	}
 
@@ -50,17 +50,17 @@ func (j Jwt) GenerateToken(userName string) (string, int64, string, error) {
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(168)).Unix(),
 		},
 	}
-	expiresAt := time.Now().Local().Add(time.Hour * time.Duration(168)).Unix()
+	expiresAt := t.Format("2-01-2006 3:04:05 PM")
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(ACCESS_KEY))
 	if err != nil {
 		log.Panic(err.Error())
-		return "", 0, "", err
+		return "", "", "", err
 	}
 
 	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refereshClaims).SignedString([]byte(REFRESH_KEY))
 	if err != nil {
 		log.Panic(err.Error())
-		return "", 0, "", err
+		return "", "", "", err
 	}
 	return token, expiresAt, refreshToken, nil
 }
@@ -95,10 +95,6 @@ func (j Jwt) ValidateToken(AccessToken string) (claims *SignedDetails, msg strin
 			return
 		}
 	}
-	// 	fmt.Println("expired")
-	// 	msg = "token expired"
-	// 	return
-	// }
 	return claims, msg
 }
 

@@ -124,7 +124,7 @@ func (c Auth) SignUp(ctx *gin.Context) {
 		ctx.Redirect(http.StatusInternalServerError, "/home")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "mesage": "Request succefully completed"})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request succefully completed"})
 }
 
 func (c Auth) Login(ctx *gin.Context) {

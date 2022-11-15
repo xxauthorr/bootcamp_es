@@ -25,7 +25,7 @@ func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 		claims, err := mw.jwt.ValidateToken(clientRefreshToken)
 		if err != "" {
 			if err == "signature is invalid" || err == "token expired" {
-				ctx.Redirect(http.StatusSeeOther, "/")
+				ctx.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "invalid refresh token"})
 				ctx.Abort()
 				return
 			}
@@ -41,7 +41,7 @@ func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 	claims, err := mw.jwt.ValidateToken(clientToken)
 	if err != "" {
 		if err == "signature is invalid" || err == "token expired" {
-			ctx.Redirect(http.StatusSeeOther, "/")
+			ctx.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "invalid token"})
 			ctx.Abort()
 			return
 		}

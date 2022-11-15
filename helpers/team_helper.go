@@ -14,8 +14,7 @@ func (t TeamHelper) TeamScanAndInsert(team models.TeamReg, user string) error {
 	// check weather the leader already have a team
 	t.dbOperation.StartTransaction()
 	for i := range team.Players {
-		player := team.Players
-		if err := t.team.InsertTeamNotification(player[i], team.TeamName, "Member"); err != nil {
+		if err := t.team.InsertTeamNotification(team.Players[i], team.TeamName, "Member"); err != nil {
 			t.dbOperation.RollBackTransaction()
 			return err
 		}

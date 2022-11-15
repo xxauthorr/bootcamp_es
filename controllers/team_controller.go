@@ -23,6 +23,7 @@ type EditTeam struct {
 	edit                database.TeamProfileUpdate
 	teamAddAchievements models.TeamAchievementsAdd
 	teamDelAchievements models.TeamAchievementsDel
+	teamNotification    models.Notification
 	teamBioEdit         models.TeamBioEdit
 	bucket              amazons3.S3
 	transaction         database.DBoperation
@@ -35,10 +36,12 @@ func (t Team) TeamProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Team not found!", "result": nil})
 		return
 	}
+	res := t.getHelp.Authorize(ctx)
 	user := ctx.GetString("user")
 	leader := t.get.GetTeamLeader(teamname)
 	teamData := t.teamDb.FetchTeamData(teamname)
 	teamData.Visit = true
+
 	if leader == user {
 		teamData = t.teamDb.FetchTeamNotification(teamData)
 		token := t.getHelp.GetToken(user)
@@ -48,7 +51,12 @@ func (t Team) TeamProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "successfully compelted", "result": teamData})
 		return
 	}
-	// show data for the client
+	if !res {
+		ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": teamData})
+		return
+	}
+	token := t.getHelp.GetToken(user)
+	teamData.Token = token
 	ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": teamData})
 }
 
@@ -77,47 +85,58 @@ func (t Team) RegisterTeam(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Team is succesfully registered"})
+	ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+t.teamRegister.TeamName)
 }
 
 func (c EditTeam) TeamEditBio(ctx *gin.Context) {
+	team := ctx.GetString("team")
 	if err := ctx.ShouldBind(&c.teamBioEdit); err != nil {
-		ctx.Redirect(http.StatusSeeOther, "/team")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	c.teamBioEdit.TeamName = ctx.GetString("team")
+	c.teamBioEdit.TeamName = team
 	if err := validate.Struct(c.teamBioEdit); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid entry !"})
 		return
 	}
-	location, err := c.bucket.UploadToS3MultipartFileHeader(c.teamBioEdit.Avatar, "teamAvatar/"+c.teamBioEdit.TeamName+".jpg")
-	if err != nil {
-		//should log error
-		ctx.Redirect(http.StatusSeeOther, "/")
+	_, picture, _ := ctx.Request.FormFile("avatar")
+	if picture != nil {
+		location, err := c.bucket.UploadToS3MultipartFileHeader(picture, "teamAvatar/"+c.teamBioEdit.TeamName+".jpg")
+		if err != nil {
+			//should log error
+			ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+			return
+		}
+		if res := c.edit.UpdateBio(c.teamBioEdit, location); !res {
+			ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+			return
+		}
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	if res := c.edit.UpdateBio(c.teamBioEdit, location); !res {
-		ctx.Redirect(http.StatusSeeOther, "/team")
+	if res := c.edit.UpdateBio(c.teamBioEdit, ""); !res {
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/team")
+	ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 }
 
 func (c EditTeam) TeamAddAchievements(ctx *gin.Context) {
 	content := ctx.Param("content")
+	team := ctx.GetString("team")
 	if err := ctx.ShouldBind(&c.teamAddAchievements); err != nil {
 		fmt.Println(err.Error())
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	c.teamAddAchievements.TeamName = ctx.GetString("team")
+	c.teamAddAchievements.TeamName = team
 	if content == "tournament" {
 		c.teamAddAchievements.Content = "TOURNAMENT"
 	}
 	if content == "scrims" {
 		c.teamAddAchievements.Content = "SCRIMS"
 	} else {
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
 	if err := validate.Struct(c.teamAddAchievements); err != nil {
@@ -127,42 +146,59 @@ func (c EditTeam) TeamAddAchievements(ctx *gin.Context) {
 	}
 	val := c.edit.GetAchievmentsName(c.teamAddAchievements)
 	if val == "" {
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
 	location, err := c.bucket.UploadToS3MultipartFileHeader(c.teamAddAchievements.Data, "/teamAchievements/"+c.teamAddAchievements.TeamName+"_"+c.teamAddAchievements.Content+"_"+val+".jpg")
 	if err != nil {
 		c.transaction.RollBackTransaction()
-		fmt.Println("s3 error")
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
 	res := c.edit.InsertTeamAchievements(location, val)
 	if !res {
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Achievements successfully inserted"})
 }
 
 func (c EditTeam) TeamDelAchievements(ctx *gin.Context) {
-	fmt.Println("team del ")
+	team := ctx.GetString("team")
 	if err := ctx.BindJSON(&c.teamDelAchievements); err != nil {
-		fmt.Println("error in binding")
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	c.teamDelAchievements.TeamName = ctx.GetString("team")
-	fmt.Println(c.teamDelAchievements.TeamName)
+	c.teamDelAchievements.TeamName = team
 	if err := validate.Struct(c.teamDelAchievements); err != nil {
 		fmt.Println("error in validate")
-		ctx.JSON(http.StatusSeeOther, "/team")
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "error in validation", "result": nil})
 		return
 	}
 	if res := c.edit.DeleteTeamAchievements(c.teamDelAchievements.Data); !res {
 		fmt.Println("error in delete")
-		ctx.JSON(http.StatusSeeOther, "/team")
+		ctx.JSON(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/team")
+	ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+}
+
+func (c EditTeam) UpdateTeamNotification(ctx *gin.Context) {
+	team := ctx.GetString("team")
+	if err := ctx.BindJSON(&c.teamNotification); err != nil {
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+		return
+	}
+	c.teamNotification.Action = ctx.Param("action")
+	if err := validate.Struct(c.teamNotification); err != nil {
+		fmt.Println("error in validate")
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "error in validation", "result": nil})
+		return
+	}
+	if res := c.edit.UpdateTeamNotification(c.teamNotification, team); !res {
+		fmt.Println("error in update Team Notification")
+		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request completed successfully"})
 }

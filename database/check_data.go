@@ -61,10 +61,17 @@ func (a Check) CheckPassword(user, pass string) (bool, error) {
 
 // returns true if user is in clan
 func (a Check) CheckUserHasClan(user string) bool {
-	checkStmnt := `SELECT * FROM team_data WHERE leader = $1;`
-	res, _ := Db.Exec(checkStmnt, user)
-	if res, _ := res.RowsAffected(); res != 0 {
-		return true
+	var team string
+	checkStmnt := `SELECT team FROM user_data WHERE username = $1;`
+	res := Db.QueryRow(checkStmnt, user)
+	if res.Err() != nil {
+		// panic
+		fmt.Println(res.Err().Error())
+		return false
+	}
+	res.Scan(&team)
+	if team != "" {
+		return team != ""
 	}
 	return false
 }

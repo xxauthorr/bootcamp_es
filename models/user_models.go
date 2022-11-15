@@ -63,11 +63,10 @@ type UserAchievements struct {
 }
 
 type UserBioEdit struct {
-	UserName string                `form:"username" validate:"required,min=4,max=12"`
-	Bio      string                `form:"bio" validate:"max=130"`
-	Crew     string                `form:"crew" validate:"max=20"`
-	Role     string                `form:"role" validate:"max=20"`
-	Avatar   *multipart.FileHeader `form:"avatar" binding:"required"`
+	UserName string `form:"username" validate:"required,min=4,max=12"`
+	Bio      string `form:"bio" validate:"max=130"`
+	Crew     string `form:"crew" validate:"max=20"`
+	Role     string `form:"role" validate:"max=20"`
 }
 
 type UserSocialEdit struct {
@@ -88,7 +87,7 @@ type UserAchievementsDel struct {
 	Data     string `json:"data" validate:"required"`
 }
 
-type UserNotification struct {
+type Notification struct {
 	Id     string `json:"id" validate:"required"`
 	Action string `json:"action" validate:"required"`
 }
@@ -96,5 +95,5 @@ type UserNotification struct {
 type Token struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	ExpiresAt    int64  `json:"expires_at"`
+	ExpiresAt    string `json:"expires_at"`
 }

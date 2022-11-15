@@ -101,7 +101,7 @@ func (t TeamProfileUpdate) GetAchievmentsName(data models.TeamAchievementsAdd) s
 		log.Panic(err.Error())
 		return ""
 	}
-	transaction.StartTransaction()
+	// transaction.StartTransaction()
 	insertStmnt := `INSERT INTO team_achievements (content,data,team_id) VALUES ($1,$2,$3) RETURNING id;`
 	val := Db.QueryRow(insertStmnt, data.Content, "sample", teamId)
 	if val.Err() != nil {
@@ -138,11 +138,57 @@ func (t TeamProfileUpdate) DeleteTeamAchievements(data string) bool {
 }
 
 func (t TeamProfileUpdate) UpdateBio(data models.TeamBioEdit, location string) bool {
-	insertStmnt := `UPDATE team_data SET instagram = $1,discord=$2,youtube=$3,bio=$4,avatar=$5 WHERE team_name = $6;`
-	_, err := Db.Exec(insertStmnt, data.Instagram, data.Youtube, data.Discord, data.Bio, location, data.TeamName)
+	var err error
+	if location != "" {
+		insertStmnt := `UPDATE team_data SET instagram = $1,discord=$2,youtube=$3,bio=$4,avatar=$5 WHERE team_name = $6;`
+		_, err = Db.Exec(insertStmnt, data.Instagram, data.Youtube, data.Discord, data.Bio, location, data.TeamName)
+	} else {
+		insertStmnt := `UPDATE team_data SET instagram = $1,discord=$2,youtube=$3,bio=$4 WHERE team_name = $5;`
+		_, err = Db.Exec(insertStmnt, data.Instagram, data.Youtube, data.Discord, data.Bio, data.TeamName)
+	}
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
 	return true
+}
+
+func (t TeamProfileUpdate) UpdateTeamNotification(data models.Notification, team string) bool {
+	if data.Action == "false" {
+		stmnt := `DELETE FROM team_notifications WHERE id = $1;`
+		if _, err := Db.Exec(stmnt, data.Id); err != nil {
+			fmt.Println(err.Error())
+			return false
+		}
+		return true
+	}
+	if data.Action == "true" {
+		var user string
+		transaction.StartTransaction()
+		getUser := `SELECT player FROM team_notifications WHERE id = $1;`
+		row := Db.QueryRow(getUser, data.Id)
+		if row.Err() != nil {
+			transaction.RollBackTransaction()
+			fmt.Println(row.Err().Error())
+			return false
+		}
+		row.Scan(&user)
+		// update user team
+		updateStmnt := `UPDATE user_data SET team = $1 WHERE username = $2;`
+		_, err := Db.Exec(updateStmnt, team, user)
+		if err != nil {
+			transaction.RollBackTransaction()
+			fmt.Println(err.Error())
+			return false
+		}
+		stmnt := `DELETE FROM team_notifications WHERE id = $1;`
+		if _, err := Db.Exec(stmnt, data.Id); err != nil {
+			transaction.RollBackTransaction()
+			fmt.Println(err.Error())
+			return false
+		}
+		transaction.CommitTransaction()
+		return true
+	}
+	return false
 }

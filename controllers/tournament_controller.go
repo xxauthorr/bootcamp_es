@@ -19,23 +19,12 @@ type Tour struct {
 
 func (c Tour) TournamentRegistration(ctx *gin.Context) {
 	user := ctx.GetString("user")
-	c.register.Game = ctx.Request.PostFormValue("game")
-	c.register.Tournament_name = ctx.Request.PostFormValue("name")
-	c.register.Prize_pool = ctx.Request.PostFormValue("prizepool")
-	c.register.No_of_slots = ctx.Request.PostFormValue("slots")
-	c.register.Registration_ends = ctx.Request.PostFormValue("reg_ends")
-	c.register.T_start = ctx.Request.PostFormValue("start")
-	c.register.T_end = ctx.Request.PostFormValue("end")
-	c.register.Registration_link = ctx.Request.PostFormValue("reg_link")
-	c.register.Live_stream = ctx.Request.PostFormValue("live")
-	c.register.Discord = ctx.Request.PostFormValue("discord")
-	// if err := ctx.BindXML(&c.register); err != nil {
-	// 	fmt.Println(err.Error(),"error here")
-	// 	ctx.Redirect(http.StatusSeeOther, "/"+user)
-	// 	return
-	// }
+	if err := ctx.ShouldBind(&c.register); err != nil {
+		fmt.Println("error in bson bind :", err.Error())
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
+	}
 	c.register.User = user
-	fmt.Println(c.register.Live_stream, c.register.Prize_pool)
 	if err := validate.Struct(c.register); err != nil {
 		fmt.Println(err.Error())
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid entry !", "result": nil})
@@ -44,12 +33,14 @@ func (c Tour) TournamentRegistration(ctx *gin.Context) {
 	res, id := c.db.RegisterTournament(c.register)
 	if !res {
 		c.transaction.RollBackTransaction()
+		fmt.Println("err1")
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	if res := c.helper.RegistrartionTournamentFiles(ctx, id); !res {
+		fmt.Println("err2")
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusOK, "/"+user)
+	ctx.Redirect(http.StatusSeeOther, "/"+user)
 }
