@@ -15,7 +15,7 @@ type Tournament struct {
 	transaction database.DBoperation
 }
 
-func (h Tournament) RegistrartionTournamentFiles(ctx *gin.Context, id int64) bool {
+func (h Tournament) RegisterTournamentFiles(ctx *gin.Context, id int64) bool {
 	var data models.Tournament_registration_data
 	data.Id = id
 	val := fmt.Sprint(id)

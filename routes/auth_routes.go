@@ -21,7 +21,7 @@ func Authroutes(incommingRoutes *gin.Engine) {
 	incommingRoutes.GET("/:username", auth.user.UserProfile)
 	incommingRoutes.GET("/teamprofile/:teamname", auth.team.TeamProfile)
 	incommingRoutes.GET("/searchfive/:entity", auth.c.SearchFirstFive)
-	
+	incommingRoutes.GET("/tournamentprofile/:tournament", auth.c.ShowTournament)
 
 	//	To check wheather the user exist or not
 	incommingRoutes.GET("/verifyuser/:username", auth.c.CheckUser)

@@ -61,6 +61,5 @@ func ConnectDb() error {
 		log.Fatal("Error connecting to database - ", err)
 		return err
 	}
-	fmt.Println("Database connected successfully")
 	return nil
 }

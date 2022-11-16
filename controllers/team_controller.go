@@ -18,9 +18,11 @@ type Team struct {
 	team         helpers.TeamHelper
 	getHelp      helpers.Help
 	get          database.Get
+	result       models.AuthResult
 }
 type EditTeam struct {
 	edit                database.TeamProfileUpdate
+	check               database.Check
 	teamAddAchievements models.TeamAchievementsAdd
 	teamDelAchievements models.TeamAchievementsDel
 	teamNotification    models.Notification
@@ -39,25 +41,28 @@ func (t Team) TeamProfile(ctx *gin.Context) {
 	res := t.getHelp.Authorize(ctx)
 	user := ctx.GetString("user")
 	leader := t.get.GetTeamLeader(teamname)
+
 	teamData := t.teamDb.FetchTeamData(teamname)
 	teamData.Visit = true
+	t.result.Data = teamData
 
 	if leader == user {
 		teamData = t.teamDb.FetchTeamNotification(teamData)
-		token := t.getHelp.GetToken(user)
 		teamData.Visit = false
-		teamData.Token = token
+		t.result.Data = teamData
+		t.result.User = user
+		t.result.Authorization = t.getHelp.GetToken(user)
 		// show team data for the owner
-		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "successfully compelted", "result": teamData})
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "successfully compelted", "result": t.result})
 		return
 	}
 	if !res {
-		ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": teamData})
+		ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": t.result})
 		return
 	}
-	token := t.getHelp.GetToken(user)
-	teamData.Token = token
-	ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": teamData})
+	t.result.Authorization = t.getHelp.GetToken(user)
+	t.result.User = user
+	ctx.JSON(http.StatusOK, gin.H{"status:": true, "message": "successfully completed", "result": t.result})
 }
 
 func (t Team) RegisterTeam(ctx *gin.Context) {
@@ -201,4 +206,18 @@ func (c EditTeam) UpdateTeamNotification(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request completed successfully"})
+}
+
+func (c EditTeam) SendTeamJoinRequeset(ctx *gin.Context) {
+	user := ctx.Param("user")
+	team := ctx.GetString("team")
+	if res := c.check.CheckTeam(team); !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid params"})
+		return
+	}
+	if err := c.edit.InsertTeamNotification(user, team, "Member"); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request succesfully completed"})
 }

@@ -40,8 +40,9 @@ type UserData struct {
 }
 
 type AuthResult struct {
-	User          UserProfileData `json:"user"`
-	Authorization Token           `json:"authentication"`
+	User          string
+	Data          interface{} `json:"data"`
+	Authorization Token       `json:"authentication"`
 }
 
 type UserPopularityUpdate struct {

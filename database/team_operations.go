@@ -13,8 +13,9 @@ type Team struct {
 type TeamProfileUpdate struct {
 }
 
-func (t Team) InsertTeamNotification(player, team, role string) error {
-	time, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+func (t TeamProfileUpdate) InsertTeamNotification(player, team, role string) error {
+	time := time.Now().Format("2-01-2006 3:04:05 PM")
+
 	insertStmnt := `INSERT INTO user_notifications(team,player,role,time) VALUES ($1,$2,$3,$4)`
 	_, err := Db.Exec(insertStmnt, team, player, role, time)
 	if err != nil {
@@ -24,8 +25,9 @@ func (t Team) InsertTeamNotification(player, team, role string) error {
 }
 
 func (t Team) InsertTeam(team models.TeamReg, user string) error {
-	insertStmnt := `INSERT INTO team_data(team_name,leader,instagram,discord) values ($1,$2,$3,$4);`
-	_, err := Db.Exec(insertStmnt, team.TeamName, user, team.Instagram, team.Discord)
+	created_at := time.Now().Format("2-01-2006 3:04:05 PM")
+	insertStmnt := `INSERT INTO team_data(team_name,leader,instagram,discord,created_at) values ($1,$2,$3,$4,$5);`
+	_, err := Db.Exec(insertStmnt, team.TeamName, user, team.Instagram, team.Discord, created_at)
 	if err != nil {
 		return err
 	}
@@ -151,6 +153,14 @@ func (t TeamProfileUpdate) UpdateBio(data models.TeamBioEdit, location string) b
 		return false
 	}
 	return true
+}
+
+func (t TeamProfileUpdate) DeleteCoLeader(user string) {
+	stmnt := `UPDATE team_data SET co_leader = null WHERE co_leader = $1;`
+	_, err := Db.Exec(stmnt, user)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func (t TeamProfileUpdate) UpdateTeamNotification(data models.Notification, team string) bool {

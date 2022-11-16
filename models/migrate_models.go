@@ -1,9 +1,5 @@
 package models
 
-import (
-	"time"
-)
-
 type User_data struct {
 	Id         uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
 	Username   string `gorm:"NOT NULL;UNIQUE"`
@@ -16,8 +12,8 @@ type User_data struct {
 	Crew       string
 	Role       string
 	Popularity int64 `gorm:"NOT NULL"`
-	Created_at time.Time
-	Updated_at time.Time
+	Created_at string
+	Updated_at string
 	Block      bool `gorm:"NOT NULL"`
 	Avatar     string
 }
@@ -30,11 +26,11 @@ type User_achievement struct {
 }
 
 type User_notification struct {
-	Id     uint64    `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
-	Team   string    `gorm:"NOT NULL"`
-	Player string    `gorm:"NOT NULL"`
-	Role   string    `gorm:"NOT NULL"`
-	Time   time.Time `gorm:"NOT NULL"`
+	Id     uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
+	Team   string `gorm:"NOT NULL"`
+	Player string `gorm:"NOT NULL"`
+	Role   string `gorm:"NOT NULL"`
+	Time   string `gorm:"NOT NULL"`
 }
 
 type User_social struct {
@@ -45,15 +41,16 @@ type User_social struct {
 }
 
 type Team_data struct {
-	Id        uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
-	Team_name string `gorm:"NOT NULL;UNIQUE"`
-	Leader    string `gorm:"NOT NULL;UNIQUE"`
-	Bio       string
-	Instagram string
-	Discord   string
-	Youtube   string
-	Avatar    string
-	Co_leader string `gorm:"UNIQUE"`
+	Id         uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
+	Team_name  string `gorm:"NOT NULL;UNIQUE"`
+	Leader     string `gorm:"NOT NULL;UNIQUE"`
+	Bio        string
+	Instagram  string
+	Discord    string
+	Youtube    string
+	Avatar     string
+	Co_leader  string `gorm:"UNIQUE"`
+	Created_at string `gorm:"NOT NULL"`
 }
 
 type Team_achievement struct {
@@ -64,11 +61,11 @@ type Team_achievement struct {
 }
 
 type Team_notification struct {
-	Id      uint64    `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
-	Team    string    `gorm:"NOT NULL"`
-	Player  string    `gorm:"NOT NULL"`
-	Request string    `gorm:"NOT NULL"`
-	Time    time.Time `gorm:"NOT NULL"`
+	Id      uint64 `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
+	Team    string `gorm:"NOT NULL"`
+	Player  string `gorm:"NOT NULL"`
+	Request string `gorm:"NOT NULL"`
+	Time    string `gorm:"NOT NULL"`
 }
 
 type User_popularity struct {
@@ -79,9 +76,9 @@ type User_popularity struct {
 
 type Tournament_data struct {
 	Id                int64  `gorm:"NOT NULL;PRIMARY_KEY;AUTO_INCREMENT"`
-	Owner             string `gorm:"NOT NULL"`
+	Owner             string `gorm:"NOT NULL;UNIQUE"`
 	Game              string `gorm:"NOT NULL"`
-	Tournament_name   string `gorm:"NOT NULL"`
+	Tournament_name   string `gorm:"NOT NULL;UNIQUE"`
 	Prize_pool        int32  `gorm:"NOT NULL"`
 	No_of_slots       int32  `gorm:"NOT NULL"`
 	Registration_ends string `gorm:"NOT NULL"`
@@ -96,4 +93,5 @@ type Tournament_data struct {
 	Manager           string
 	Sponser           string
 	Streamer          string
+	Created_at        string `gorm:"NOT NULL"`
 }

@@ -6,4 +6,5 @@ type Entities struct {
 	Scrims       string
 	Tournaments  string
 	Recruitments string
+	Authorization Token
 }

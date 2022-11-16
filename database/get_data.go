@@ -27,6 +27,21 @@ func (g Get) GetUsername(phone string) string {
 	return username
 }
 
+func (g Get) GetTournamentOwner(tour string) string {
+	stmnt := `SELECT owner FROM tournament_data WHERE tournament_name = $1;`
+	row := Db.QueryRow(stmnt, tour)
+	if row.Err() != nil {
+		fmt.Println(row.Err().Error())
+		return ""
+	}
+	var owner string
+	if err := row.Scan(&owner); err != nil {
+		fmt.Println(err.Error())
+		return ""
+	}
+	return owner
+}
+
 // returns the new id after inserting dummy data into user_data
 func (g Get) GetNewAchievementName(user, content string) string {
 	var userId, id string
@@ -156,6 +171,20 @@ func (g Get) UserNotification(data model.UserProfileData) (bool, model.UserProfi
 	return true, data
 }
 
+func (g Get) CheckTeamCoLeader(user string) bool {
+	var id int64
+	stmnt := `SELECT count(id) FROM team_data WHERE co_leader = $1;`
+	row := Db.QueryRow(stmnt, user)
+	if row.Err() != nil {
+		log.Fatal(row.Err().Error())
+	}
+	row.Scan(&id)
+	if id != 0 {
+		return id != 0
+	}
+	return false
+}
+
 func (g Get) GetTeamName(data string) string {
 	var team string
 	getTeam := `SELECT team FROM user_data WHERE username = $1;`
@@ -172,7 +201,7 @@ func (g Get) CheckTeamExist(leader string) string {
 	getTeam := `SELECT team_name FROM team_data WHERE leader = $1;`
 	row := Db.QueryRow(getTeam, leader)
 	if err := row.Scan(&teamName); err != nil {
-		fmt.Println(err.Error(), "getTeamLeader")
+		// fmt.Println(err.Error(), "getTeamLeader")
 		return ""
 	}
 	return teamName

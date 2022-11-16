@@ -23,11 +23,13 @@ type Auth struct {
 	login          models.LoginForm
 	forgetPass     models.ForgetPassword
 	changePassword models.ChangePassword
+	result         models.AuthResult
 	tokenResult    models.Token
 	search         models.Search
 	dbCheck        database.Check
 	get            database.Get
 	UserDB         database.User
+	tournament     database.Tournament
 	help           helpers.Help
 	twilio         twilio.Do
 	jwt            jwt.Jwt
@@ -39,7 +41,7 @@ func (c Auth) CheckUser(ctx *gin.Context) {
 	userName := ctx.Param("username")
 	res := c.dbCheck.CheckUser(userName)
 	if !res {
-		ctx.JSON(http.StatusOK, gin.H{"status": false, "message": "request succefully completed"})
+		ctx.JSON(http.StatusOK, gin.H{"status": res, "message": "request succefully completed"})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": res, "message": "request succefully completed"})
@@ -60,12 +62,13 @@ func (c Auth) Home(ctx *gin.Context) {
 	homeData := c.help.GetHomeData()
 	if !status {
 		// for not logged in users
-		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Not logged in", "result": homeData})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
 		return
 	}
 	// for logged in users
 	user := ctx.GetString("user")
 	token := c.help.GetToken(user)
+	homeData.User = user
 	homeData.Authorization = token
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request succesfully completed", "result": homeData})
 }
@@ -230,7 +233,6 @@ func (c Auth) ChangePassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusBadRequest, gin.H{"status": true, "message": "Password succesfully changed !"})
 }
 
-
 func (c Auth) SearchFirstFive(ctx *gin.Context) {
 	entity := ctx.Param("entity")
 	if err := ctx.BindJSON(&c.search); err != nil {
@@ -245,8 +247,25 @@ func (c Auth) SearchFirstFive(ctx *gin.Context) {
 	}
 	res, data := c.get.GetFirstFive(c.search)
 	if !res {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid params", "result": nil})
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid params", "result": nil})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request completed successfully", "result": data})
+}
+
+func (c Auth) ShowTournament(ctx *gin.Context) {
+	tour := ctx.Param("tournament")
+	if res := c.dbCheck.CheckTournament(tour); !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Tournament with this name does'nt exist"})
+		return
+	}
+	c.result.Data = c.tournament.GetTournamentData(tour)
+	if res := c.help.Authorize(ctx); res {
+		// show owner profile
+		c.result.User = ctx.GetString("user")
+		c.result.Authorization = c.help.GetToken(c.result.User)
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request succesfully completed", "result": c.result})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request succesfully completed", "result": c.result})
 }

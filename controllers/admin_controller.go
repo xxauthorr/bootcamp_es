@@ -12,15 +12,20 @@ import (
 type AdminControllers struct {
 	helper     helpers.AdminHelper
 	userHelper helpers.UserHelper
-	entities   models.Entities
+	help       helpers.Help
 	search     models.Search
 	check      database.Check
 }
 
-func (c AdminControllers) Dashboard(ctx *gin.Context, user string) {
-	c.entities = c.helper.GetEntitiesCount()
+func (c AdminControllers) AdminHome(ctx *gin.Context) {
+	user := ctx.GetString("user")
+	c.Dashboard(ctx, user)
+}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request completed succesfully", "Result": c.entities})
+func (c AdminControllers) Dashboard(ctx *gin.Context, user string) {
+	entities := c.helper.GetEntitiesCount()
+	entities.Authorization = c.help.GetToken(user)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request completed succesfully", "Result": entities})
 }
 
 func (c AdminControllers) Search(ctx *gin.Context) {

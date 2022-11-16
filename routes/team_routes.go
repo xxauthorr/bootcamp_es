@@ -22,4 +22,5 @@ func Team(incommingRoutes *gin.Engine) {
 	routes.PUT("/addachievements/:content", te.cTeamEdit.TeamAddAchievements)
 	routes.DELETE("/delachievements", te.cTeamEdit.TeamDelAchievements)
 	routes.PUT("/updatenotification/:action", te.cTeamEdit.UpdateTeamNotification)
+	routes.PUT("/joinrequest/:user",te.cTeamEdit.SendTeamJoinRequeset)
 }

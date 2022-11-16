@@ -28,6 +28,7 @@ func User(incommingRoutes *gin.Engine) {
 	route.POST("/teamregistration", us.cTeam.RegisterTeam)
 	route.PUT("/userpops/:to", us.edit.UserPopularityEdit)
 	route.PUT("/teamrequest/:team", us.edit.SendTeamJoinRequest)
+	route.PUT("/teamexit", us.edit.ExitTeam)
 }
 
 // Contains all the routes to edit the control settings (password,email,phone)

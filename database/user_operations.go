@@ -13,8 +13,9 @@ type User struct {
 
 func (u User) InsertUser(user model.SignupForm) error {
 
-	created_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updated_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	created_at := time.Now().Format("2-01-2006 3:04:05 PM")
+	updated_at := time.Now().Format("2-01-2006 3:04:05 PM")
+
 	user.Password = u.helper.HashPassword(user.Password)
 
 	insertStm := `INSERT INTO user_data (username,phone,password,user_type,popularity,created_at,updated_at,block) VALUES ($1,$2,$3,'USER','0',$4,$5,'false');`
@@ -212,9 +213,19 @@ func (u User) UpdatePopularityList(data model.UserPopularityUpdate) bool {
 }
 
 func (u User) InsertTeamNotification(player, team, req string) bool {
-	time, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	time := time.Now().Format("2-01-2006 3:04:05 PM")
 	stmtn := `INSERT INTO team_notifications(team,player,request,time) VALUES($1,$2,$3,$4);`
 	_, err := Db.Exec(stmtn, team, player, req, time)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
+func (u User) ExitTeam(user string) bool {
+	stmnt := `UPDATE user_data SET team = null WHERE username = $1;`
+	_, err := Db.Exec(stmnt, user)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false

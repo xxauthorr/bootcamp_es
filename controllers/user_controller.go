@@ -15,7 +15,8 @@ type UserEdit struct {
 	check               database.Check
 	transaction         database.DBoperation
 	update              database.User
-	achievement         database.Get
+	get                 database.Get
+	teamDb              database.TeamProfileUpdate
 	userBioData         models.UserBioEdit
 	userAddAchievements models.UserAchievementsAdd
 	userDelAchievements models.UserAchievementsDel
@@ -27,11 +28,11 @@ type UserEdit struct {
 }
 
 type User struct {
-	check      database.Check
-	help       helpers.UserHelper
-	getHelp    helpers.Help
-	auth       helpers.Help
-	AuthResult models.AuthResult
+	check   database.Check
+	help    helpers.UserHelper
+	getHelp helpers.Help
+	auth    helpers.Help
+	Result  models.AuthResult
 }
 
 func (user User) UserProfile(ctx *gin.Context) {
@@ -47,29 +48,31 @@ func (user User) UserProfile(ctx *gin.Context) {
 		data := user.help.FetchProfileData(client, true)
 		data.Liked = user.check.CheckUserPopularity(client, username)
 		data.Visit = false
-		user.AuthResult.User = data
+		user.Result.User = client
+		user.Result.Data = data
 		//update token
 		token := user.getHelp.GetToken(client)
-		user.AuthResult.Authorization = token
-		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
+		user.Result.Authorization = token
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed for user " + client, "result": user.Result})
 		return
 	}
 	data := user.help.FetchProfileData(username, false)
 	if !res {
 		data.Visit = true
 		data.Liked = false
-		user.AuthResult.User = data
-		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
+		user.Result.Data = data
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed for guest user", "result": user.Result})
 		return
 	}
 	data.Liked = user.check.CheckUserPopularity(client, username)
 	data.Visit = true
-	user.AuthResult.User = data
+	user.Result.User = client
+	user.Result.Data = data
 	//update token
 	token := user.getHelp.GetToken(client)
-	user.AuthResult.Authorization = token
+	user.Result.Authorization = token
 	//update token
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed", "result": user.AuthResult})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed for user " + client, "result": user.Result})
 }
 
 func (edit UserEdit) UserPopularityEdit(ctx *gin.Context) {
@@ -97,7 +100,7 @@ func (edit UserEdit) UserPopularityEdit(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed"})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 }
 
 func (edit UserEdit) BioEdit(ctx *gin.Context) {
@@ -135,8 +138,7 @@ func (edit UserEdit) BioEdit(ctx *gin.Context) {
 		return
 	}
 	//  then go to /profile/:username
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
-
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 }
 
 func (edit UserEdit) UserAddAcheivements(ctx *gin.Context) {
@@ -154,7 +156,7 @@ func (edit UserEdit) UserAddAcheivements(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Request body is invalid !"})
 		return
 	}
-	val := edit.achievement.GetNewAchievementName(user, edit.userAddAchievements.Content)
+	val := edit.get.GetNewAchievementName(user, edit.userAddAchievements.Content)
 	if val == "" {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
@@ -170,8 +172,7 @@ func (edit UserEdit) UserAddAcheivements(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
-
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 }
 
 func (edit UserEdit) UserDelAcheivements(ctx *gin.Context) {
@@ -194,7 +195,7 @@ func (edit UserEdit) UserDelAcheivements(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 
 }
 
@@ -218,7 +219,7 @@ func (edit UserEdit) UserSocialEdit(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 }
 
 func (edit UserEdit) UpdateNotification(ctx *gin.Context) {
@@ -242,7 +243,7 @@ func (edit UserEdit) UpdateNotification(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 }
 
 func (edit UserEdit) SendTeamJoinRequest(ctx *gin.Context) {
@@ -252,13 +253,33 @@ func (edit UserEdit) SendTeamJoinRequest(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"result": false, "message": "User is already in a clan"})
 		return
 	}
+	// check weather the clan exists
+	if res := edit.check.CheckTeam(team); !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "team doesn't exist"})
+	}
 	if res := edit.update.InsertTeamNotification(user, team, "join clan"); !res {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed"})
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed for user " + user})
 }
 
-func (edit UserEdit) UserChangePassword(ctx *gin.Context) {
-
+func (edit UserEdit) ExitTeam(ctx *gin.Context) {
+	user := ctx.GetString("user")
+	if res := edit.check.CheckUserHasClan(user); !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "user is not in a clan"})
+		return
+	}
+	if val := edit.get.CheckTeamExist(user); val != "" {
+		ctx.JSON(http.StatusOK, gin.H{"status": false, "message": "Leader can't exit team"})
+		return
+	}
+	if res := edit.get.CheckTeamCoLeader(user); res {
+		edit.teamDb.DeleteCoLeader(user)
+	}
+	if res := edit.update.ExitTeam(user); !res {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request completed successfully"})
 }

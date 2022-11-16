@@ -25,7 +25,6 @@ type TeamData struct {
 	Discord       *string
 	Achievements  TeamAchievements
 	Notifications []TeamNotification
-	Token         Token
 }
 
 type TeamAchievements struct {

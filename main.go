@@ -3,9 +3,11 @@ package main
 import (
 	"bootcamp_es/database"
 	routes "bootcamp_es/routes"
+	"fmt"
 	"log"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -21,7 +23,7 @@ func main() {
 
 	// connect to the psql database and return error if any
 	database.ConnectDb()
-
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Logger())
 
@@ -31,5 +33,7 @@ func main() {
 	routes.Tournament(router)
 	routes.Admin(router)
 
+	color.New(color.BgHiGreen).Print("server is running...")
+	fmt.Println()
 	router.Run(":" + port)
 }

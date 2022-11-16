@@ -12,6 +12,7 @@ import (
 
 type Tour struct {
 	register    models.Tournament_registration_data
+	check       database.Check
 	db          database.Tournament
 	transaction database.DBoperation
 	helper      helpers.Tournament
@@ -30,6 +31,10 @@ func (c Tour) TournamentRegistration(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid entry !", "result": nil})
 		return
 	}
+	if res := c.check.CheckTournament(c.register.Tournament_name); res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Tournament with this name alreaddy registered"})
+		return
+	}
 	res, id := c.db.RegisterTournament(c.register)
 	if !res {
 		c.transaction.RollBackTransaction()
@@ -37,10 +42,11 @@ func (c Tour) TournamentRegistration(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	if res := c.helper.RegistrartionTournamentFiles(ctx, id); !res {
+	if res := c.helper.RegisterTournamentFiles(ctx, id); !res {
 		fmt.Println("err2")
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/"+user)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request completed successfully"})
 }
+

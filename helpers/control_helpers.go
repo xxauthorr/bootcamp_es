@@ -43,7 +43,6 @@ func (h Help) Authorize(ctx *gin.Context) bool {
 		}
 		claims, err := h.tokenCheck.ValidateRefreshToken(clientRefreshToken)
 		if err != "" {
-			fmt.Println(err)
 			if err == "signature is invalid" || err == "token expired" {
 				return false
 			}
@@ -55,7 +54,6 @@ func (h Help) Authorize(ctx *gin.Context) bool {
 	}
 	claims, err := h.tokenCheck.ValidateToken(clientToken)
 	if err != "" {
-		fmt.Println(err, "error")
 		if err == "signature is invalid" || err == "token expired" {
 			return false
 		}

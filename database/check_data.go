@@ -44,6 +44,16 @@ func (a Check) CheckTeam(teamName string) bool {
 	return false
 }
 
+func (a Check) CheckTournament(tournament string) bool {
+	checkStmt := `SELECT * FROM tournament_data WHERE tournament_name = $1;`
+	res, _ := Db.Exec(checkStmt, tournament)
+	result, _ := res.RowsAffected()
+	if result != 0 {
+		return result != 0
+	}
+	return false
+}
+
 func (a Check) CheckPassword(user, pass string) (bool, error) {
 	var hash string
 	getStmnt := `SELECT password FROM user_data WHERE username = $1;`
