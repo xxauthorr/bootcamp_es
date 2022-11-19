@@ -37,20 +37,7 @@ func (h Help) GetUsername(phone string) string {
 func (h Help) Authorize(ctx *gin.Context) bool {
 	clientToken := ctx.Request.Header.Get("token")
 	if clientToken == "" {
-		clientRefreshToken := ctx.Request.Header.Get("refresh_token")
-		if clientRefreshToken == "" {
-			return false
-		}
-		claims, err := h.tokenCheck.ValidateRefreshToken(clientRefreshToken)
-		if err != "" {
-			if err == "signature is invalid" || err == "token expired" {
-				return false
-			}
-			// should log the error
-			return false
-		}
-		ctx.Set("user", claims.User)
-		return true
+		return false
 	}
 	claims, err := h.tokenCheck.ValidateToken(clientToken)
 	if err != "" {

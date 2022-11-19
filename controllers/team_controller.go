@@ -212,7 +212,7 @@ func (c EditTeam) SendTeamJoinRequeset(ctx *gin.Context) {
 	user := ctx.Param("user")
 	team := ctx.GetString("team")
 	if res := c.check.CheckTeam(team); !res {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid params"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Team doesn't exist"})
 		return
 	}
 	if err := c.edit.InsertTeamNotification(user, team, "Member"); err != nil {

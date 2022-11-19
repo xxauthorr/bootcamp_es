@@ -12,6 +12,7 @@ import (
 
 type Tour struct {
 	register    models.Tournament_registration_data
+	editTour    models.EditTournamentData
 	check       database.Check
 	db          database.Tournament
 	transaction database.DBoperation
@@ -50,3 +51,22 @@ func (c Tour) TournamentRegistration(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request completed successfully"})
 }
 
+func (c Tour) EditTournamentData(ctx *gin.Context) {
+	if err := ctx.ShouldBind(&c.editTour); err != nil {
+		fmt.Println("reached")
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid body"})
+		return
+	}
+	c.editTour.Name = ctx.GetString("tournament")
+	if err := validate.Struct(c.editTour); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid body"})
+		return
+	}
+	res := make(chan bool)
+	go c.helper.UpdateTournamentFiles(ctx, c.editTour.Name, res)
+	if response := c.db.UpdateTournament(c.editTour); !response {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed"})
+}

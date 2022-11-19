@@ -98,19 +98,21 @@ func (a Check) CheckUserType(username string) string {
 	return res
 }
 
-func (a Check) CheckUserPopularity(from, to string) bool {
+func (a Check) CheckUserPopularity(from, to string, liked chan bool) {
 	var count string
 	stmnt := `SELECT count(id) FROM user_popularities WHERE provide = $1 AND consume = $2;`
 	row := Db.QueryRow(stmnt, from, to)
 	if err := row.Scan(&count); err != nil {
 		fmt.Println(err.Error(), from, to)
 		fmt.Println("error in checkuserPopularity")
-		return false
+		liked <- false
+		return
 	}
 	if count != "1" {
-		return false
+		liked <- false
+		return
 	}
-	return true
+	liked <- true
 }
 
 func (a Check) CheckPopularityList(from, to string) bool {
@@ -125,6 +127,42 @@ func (a Check) CheckPopularityList(from, to string) bool {
 		return true
 	}
 	return false
+}
+
+func (a Check) CheckUserBlocked(user string) bool {
+	var value string
+	stmnt := `SELECT block FROM user_data WHERE username = $1;`
+	row := Db.QueryRow(stmnt, user)
+	if row.Err() != nil {
+		fmt.Println(row.Err().Error())
+		return false
+	}
+	if err := row.Scan(&value); err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	if value == "false" {
+		return value == "false"
+	}
+	return false
+}
+
+func (a Check) GetTour(user string) (string, bool) {
+	var tourName *string
+	stmnt := `SELECT tournament_name FROM tournament_data WHERE owner = $1;`
+	row := Db.QueryRow(stmnt, user)
+	if row.Err() != nil {
+		fmt.Println(row.Err().Error())
+		return "", false
+	}
+	if err := row.Scan(&tourName); err != nil {
+		fmt.Println(row.Err().Error())
+		return "", false
+	}
+	if tourName == nil {
+		return "", false
+	}
+	return *tourName, true
 }
 
 func (a DBoperation) StartTransaction() {

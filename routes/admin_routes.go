@@ -11,6 +11,7 @@ type admin struct {
 	adminController controllers.AdminControllers
 	adminMw         middlewares.AdminCheckers
 	mw              middlewares.Mwares
+	auth            controllers.Auth
 }
 
 var ad admin
@@ -19,7 +20,12 @@ func Admin(incommingRoutes *gin.Engine) {
 	admin := incommingRoutes.Group("/admin")
 	admin.Use(ad.mw.AuthneticateToken)
 	admin.Use(ad.adminMw.CheckUserType)
-	admin.GET("/", ad.adminController.Search)
-	admin.POST("/search", ad.adminController.AdminHome)
-
+	admin.POST("/", ad.adminController.AdminHome)
+	admin.GET("/searchcontent", ad.auth.SearchFirstFive)
+	admin.GET("/search", ad.adminController.Search)
+	admin.GET("/listuser/:page", ad.adminController.ListUsers)
+	admin.GET("/listteam/:page", ad.adminController.ListTeam)
+	admin.GET("/listtournament/:page", ad.adminController.ListTournament)
+	admin.PUT("/updateusertype/:action", ad.adminController.UpdateUserType)
+	admin.PUT("/updateuserblocked/:action", ad.adminController.UpdateBlock)
 }

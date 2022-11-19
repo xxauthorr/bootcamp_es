@@ -36,6 +36,48 @@ type Auth struct {
 	admin          AdminControllers
 }
 
+func (c Auth) GetToken(ctx *gin.Context) {
+	clientToken := ctx.Request.Header.Get("token")
+	refreshToken := ctx.Request.Header.Get("refresh_token")
+	if clientToken == "" && refreshToken == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid request"})
+		return
+	}
+	if clientToken != "" {
+		claims, msg := c.jwt.ValidateToken(clientToken)
+		if msg != "" {
+			if msg == "token expired" {
+				ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": msg})
+				return
+			}
+			if msg == "signature is invalid" {
+				ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": msg})
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+			return
+		}
+		token := c.help.GetToken(claims.User)
+		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request succesfully completed", "result": token})
+		return
+	}
+	claims, msg := c.jwt.ValidateRefreshToken(refreshToken)
+	if msg != "" {
+		if msg == "token expired" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "User must login"})
+			return
+		}
+		if msg == "signature is invalid" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid signature, User must login"})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+		return
+	}
+	token := c.help.GetToken(claims.User)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request succesfully completed", "result": token})
+}
+
 // used to check weather the user is already exist or not
 func (c Auth) CheckUser(ctx *gin.Context) {
 	userName := ctx.Param("username")
@@ -65,8 +107,12 @@ func (c Auth) Home(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
 		return
 	}
-	// for logged in users
 	user := ctx.GetString("user")
+	if res := c.dbCheck.CheckUserBlocked(user); !res {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
+		return
+	}
+	// for logged in users
 	token := c.help.GetToken(user)
 	homeData.User = user
 	homeData.Authorization = token
@@ -142,6 +188,10 @@ func (c Auth) Login(ctx *gin.Context) {
 	res := c.dbCheck.CheckUser(c.login.UserName)
 	if !res {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "Username does'nt exist !"})
+		return
+	}
+	if res := c.dbCheck.CheckUserBlocked(c.login.UserName); !res {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "User has been banned"})
 		return
 	}
 	res, err := c.dbCheck.CheckPassword(c.login.UserName, c.login.Password)

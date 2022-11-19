@@ -27,6 +27,7 @@ func Authroutes(incommingRoutes *gin.Engine) {
 	incommingRoutes.GET("/verifyuser/:username", auth.c.CheckUser)
 	incommingRoutes.GET("/verifyteam/:teamname", auth.c.CheckTeam)
 	routes := incommingRoutes.Group("/auth")
+	routes.GET("/gettoken", auth.c.GetToken)
 	routes.POST("/login", auth.c.Login)
 	routes.POST("/otp", auth.c.SendPhoneOTP)
 	routes.POST("/signup", auth.c.SignUp)

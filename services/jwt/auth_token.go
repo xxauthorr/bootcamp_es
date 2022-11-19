@@ -113,12 +113,10 @@ func (j Jwt) ValidateRefreshToken(AccessToken string) (claims *SignedDetails, ms
 	)
 	claims, ok := token.Claims.(*SignedDetails)
 	if !ok {
-		// msg = fmt.Sprintf("the token is invalid")
 		msg = err.Error()
 		return
 	}
 	if claims.ExpiresAt < time.Now().Local().Unix() {
-		// msg = fmt.Sprintf("token expired")
 		msg = "token expired"
 		return
 	}
@@ -131,6 +129,3 @@ func (j Jwt) ValidateRefreshToken(AccessToken string) (claims *SignedDetails, ms
 	return claims, msg
 }
 
-// func UpdateTokens(signedToken string, signedRefreshToken string, userName string) {
-// 	var up dateObj primitive.D
-// }

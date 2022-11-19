@@ -46,7 +46,9 @@ func (user User) UserProfile(ctx *gin.Context) {
 	client := ctx.GetString("user")
 	if username == client && res {
 		data := user.help.FetchProfileData(client, true)
-		data.Liked = user.check.CheckUserPopularity(client, username)
+		liked := make(chan bool)
+		go user.check.CheckUserPopularity(client, username, liked)
+		data.Liked = <-liked
 		data.Visit = false
 		user.Result.User = client
 		user.Result.Data = data
@@ -64,7 +66,9 @@ func (user User) UserProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Succesfully completed for guest user", "result": user.Result})
 		return
 	}
-	data.Liked = user.check.CheckUserPopularity(client, username)
+	liked := make(chan bool)
+	go user.check.CheckUserPopularity(client, username, liked)
+	data.Liked = <-liked
 	data.Visit = true
 	user.Result.User = client
 	user.Result.Data = data
@@ -235,7 +239,8 @@ func (edit UserEdit) UpdateNotification(ctx *gin.Context) {
 		return
 	}
 	if status := edit.check.CheckUserHasClan(user); status {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "user is already in a clan"})
+		//delete notification
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": user + " is already in a clan"})
 		return
 	}
 	res := edit.help.UpdateNotification(edit.userNotification.Id, edit.userNotification.Action)

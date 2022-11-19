@@ -269,6 +269,19 @@ func (g Get) TopEntities() model.HomeData {
 	return data
 }
 
+func (g Get) GetTournamentId(name string) int64 {
+	var id int64
+	row := Db.QueryRow(`SELECT id FROM tournament_data WHERE tournament_name = $1`, name)
+	if row.Err() != nil {
+		fmt.Println(row.Err().Error())
+		return 0
+	}
+	if err := row.Scan(&id); err != nil {
+		fmt.Println(row.Err().Error())
+		return 0
+	}
+	return id
+}
 func (g Get) GetFirstFive(data model.Search) (bool, []string) {
 	var value string
 	var values []string

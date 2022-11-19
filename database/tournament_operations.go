@@ -29,7 +29,7 @@ func (db Tournament) RegisterTournament(data models.Tournament_registration_data
 	return true, id
 }
 
-func (db Tournament) UpdateFile(data models.Tournament_registration_data) bool {
+func (db Tournament) InsertFile(data models.Tournament_registration_data) bool {
 	stmnt := `UPDATE tournament_data SET banner=$1,prize_pool_banner=$2,road_map=$3 WHERE id = $4;`
 	_, err := Db.Exec(stmnt, data.Banner, data.Prize_pool_banner, data.Road_map, data.Id)
 	if err != nil {
@@ -56,3 +56,30 @@ func (db Tournament) GetTournamentData(tour string) models.Tournament_fetch_data
 	return data
 }
 
+func (db Tournament) UpdateFile(fileName, file string, id int64) bool {
+	var stmnt string
+	if file == "banner" {
+		stmnt = `UPDATE tournament_data SET banner = $1 WHERE id = $2;`
+	} else if file == "prize" {
+		stmnt = `UPDATE tournament_data SET prize_pool_banner = $1 WHERE id = $2;`
+	} else {
+		stmnt = `UPDATE tournament_data SET road_map = $1 WHERE id = $2;`
+	}
+	_, err := Db.Exec(stmnt, fileName, id)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
+func (db Tournament) UpdateTournament(data models.EditTournamentData) bool {
+	stmnt := `UPDATE tournament_data SET no_of_slots = $1,manager= $2,registration_link = $3,registration_ends = $4 WHERE tournament_name = $5;`
+	_, err := Db.Exec(stmnt, data.Slots, data.Manager, data.Reg_Link, data.Reg_ends, data.Name)
+	if err != nil {
+		fmt.Println(err.Error())
+
+		return false
+	}
+	return true
+}
