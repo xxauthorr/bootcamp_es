@@ -14,7 +14,6 @@ import (
 
 type AdminControllers struct {
 	helper         helpers.AdminHelper
-	help           helpers.Help
 	search         models.Search
 	admin          database.Admin
 	result         models.AdminResult
