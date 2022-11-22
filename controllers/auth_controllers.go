@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"bootcamp_es/database"
-	"bootcamp_es/helpers"
-	"bootcamp_es/models"
+	"github.com/xxauthorr/bootcamp_es/database"
+	"github.com/xxauthorr/bootcamp_es/helpers"
+	"github.com/xxauthorr/bootcamp_es/models"
 
-	// bycrypt "bootcamp_es/services/byCrypt"
-	"bootcamp_es/services/jwt"
+	// bycrypt "github.com/xxauthorr/bootcamp_es/services/byCrypt"
+	"github.com/xxauthorr/bootcamp_es/services/jwt"
 
-	"bootcamp_es/services/twilio"
+	"github.com/xxauthorr/bootcamp_es/services/twilio"
 	"fmt"
 	"net/http"
 

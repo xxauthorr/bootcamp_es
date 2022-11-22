@@ -1,7 +1,7 @@
 package database
 
 import (
-	"bootcamp_es/models"
+	"github.com/xxauthorr/bootcamp_es/models"
 	"fmt"
 	"log"
 )

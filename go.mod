@@ -1,4 +1,4 @@
-module bootcamp_es
+module github.com/xxauthorr/bootcamp_es
 
 go 1.19
 

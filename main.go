@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bootcamp_es/database"
-	routes "bootcamp_es/routes"
+	"github.com/xxauthorr/bootcamp_es/database"
+	routes "github.com/xxauthorr/bootcamp_es/routes"
 	"fmt"
 	"log"
 	"os"

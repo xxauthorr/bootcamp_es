@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"bootcamp_es/database"
+	"github.com/xxauthorr/bootcamp_es/database"
 	"fmt"
 	"net/http"
 

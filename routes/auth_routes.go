@@ -1,7 +1,7 @@
 package routes
 
 import (
-	controller "bootcamp_es/controllers"
+	controller "github.com/xxauthorr/bootcamp_es/controllers"
 
 	"github.com/gin-gonic/gin"
 )

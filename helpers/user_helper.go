@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"bootcamp_es/database"
-	"bootcamp_es/models"
+	"github.com/xxauthorr/bootcamp_es/database"
+	"github.com/xxauthorr/bootcamp_es/models"
 	"fmt"
 )
 

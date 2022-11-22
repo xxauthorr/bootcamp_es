@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"bootcamp_es/database"
-	"bootcamp_es/helpers"
-	"bootcamp_es/models"
+	"github.com/xxauthorr/bootcamp_es/database"
+	"github.com/xxauthorr/bootcamp_es/helpers"
+	"github.com/xxauthorr/bootcamp_es/models"
 	"fmt"
 	"net/http"
 

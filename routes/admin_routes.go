@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"bootcamp_es/controllers"
-	"bootcamp_es/middlewares"
+	"github.com/xxauthorr/bootcamp_es/controllers"
+	"github.com/xxauthorr/bootcamp_es/middlewares"
 
 	"github.com/gin-gonic/gin"
 )

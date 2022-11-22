@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"bootcamp_es/services/jwt"
+	"github.com/xxauthorr/bootcamp_es/services/jwt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

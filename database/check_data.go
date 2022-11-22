@@ -1,7 +1,7 @@
 package database
 
 import (
-	bycrypt "bootcamp_es/services/byCrypt"
+	bycrypt "github.com/xxauthorr/bootcamp_es/services/byCrypt"
 	"fmt"
 )
 

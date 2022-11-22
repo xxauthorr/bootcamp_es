@@ -1,9 +1,9 @@
 package helpers
 
 import (
-	"bootcamp_es/database"
-	"bootcamp_es/models"
-	amazons3 "bootcamp_es/services/AmazonS3"
+	"github.com/xxauthorr/bootcamp_es/database"
+	"github.com/xxauthorr/bootcamp_es/models"
+	amazons3 "github.com/xxauthorr/bootcamp_es/services/AmazonS3"
 	"fmt"
 
 	"github.com/gin-gonic/gin"

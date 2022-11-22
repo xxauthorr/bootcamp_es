@@ -1,8 +1,8 @@
 package database
 
 import (
-	model "bootcamp_es/models"
-	bycrypt "bootcamp_es/services/byCrypt"
+	model "github.com/xxauthorr/bootcamp_es/models"
+	bycrypt "github.com/xxauthorr/bootcamp_es/services/byCrypt"
 	"fmt"
 	"time"
 )
