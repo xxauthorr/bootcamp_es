@@ -44,6 +44,16 @@ func (c Auth) GetToken(ctx *gin.Context) {
 		return
 	}
 	if clientToken != "" {
+		var count int
+		for i := range clientToken {
+			if clientToken[i] == '.' {
+				count = count + 1
+			}
+		}
+		if count != 2 {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Invalid token"})
+			return
+		}
 		claims, msg := c.jwt.ValidateToken(clientToken)
 		if msg != "" {
 			if msg == "token expired" {

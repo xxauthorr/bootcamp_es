@@ -16,6 +16,17 @@ type Mwares struct {
 
 func (mw Mwares) AuthneticateToken(ctx *gin.Context) {
 	clientToken := ctx.Request.Header.Get("token")
+	var count int
+	for i := range clientToken {
+		if clientToken[i] == '.' {
+			count = count + 1
+		}
+	}
+	if count != 2 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Invalid token"})
+		ctx.Abort()
+		return
+	}
 	if clientToken == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Token not passed"})
 		ctx.Abort()

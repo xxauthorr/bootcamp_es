@@ -29,7 +29,6 @@ func (c AdminControllers) AdminHome(ctx *gin.Context) {
 
 func (c AdminControllers) Dashboard(ctx *gin.Context, user string) {
 	entities := c.helper.GetEntitiesCount()
-	entities.Authorization = c.help.GetToken(user)
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request completed succesfully", "Result": entities})
 }
 
@@ -60,7 +59,6 @@ func (c AdminControllers) Search(ctx *gin.Context) {
 		}
 
 	}
-	c.result.Authorize = c.help.GetToken(user)
 	c.result.Admin = user
 	c.result.Data = data
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request succesfully completed", "result": c.result})
@@ -104,6 +102,11 @@ func (c AdminControllers) ListTournament(ctx *gin.Context) {
 
 func (c AdminControllers) UpdateUserType(ctx *gin.Context) {
 	action := ctx.Param("action")
+	user := ctx.GetString("user")
+	if res := c.helper.SuperUser(user); !res {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Only super admin have access !"})
+		return
+	}
 	if err := ctx.BindJSON(&c.updateUserData); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid body"})
 		return
@@ -113,7 +116,6 @@ func (c AdminControllers) UpdateUserType(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid body"})
 		return
 	}
-	user := ctx.GetString("user")
 	if res := c.check.CheckUser(c.updateUserData.User); !res {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "User doesn't exit"})
 		return
@@ -127,6 +129,7 @@ func (c AdminControllers) UpdateUserType(ctx *gin.Context) {
 
 func (c AdminControllers) UpdateBlock(ctx *gin.Context) {
 	action := ctx.Param("action")
+	fmt.Println(action)
 	if err := ctx.BindJSON(&c.updateUserData); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "invalid body"})
 		return
@@ -146,4 +149,29 @@ func (c AdminControllers) UpdateBlock(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully completed", "user": user})
+}
+
+func (c AdminControllers) DeleteTournament(ctx *gin.Context) {
+	tourney := ctx.Param("tournament")
+	if res := c.check.CheckTournament(tourney); !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Tournament not exist"})
+		return
+	}
+	if res := c.admin.DeleteTournament(tourney); !res {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request executed successfully"})
+}
+func (c AdminControllers) DeleteTeam(ctx *gin.Context) {
+	team := ctx.Param("team")
+	if res := c.check.CheckTeam(team); !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Team not exist"})
+		return
+	}
+	if res := c.admin.DeleteTeam(team); !res {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request executed successfully"})
 }

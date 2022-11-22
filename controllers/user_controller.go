@@ -48,8 +48,8 @@ func (user User) UserProfile(ctx *gin.Context) {
 		data := user.help.FetchProfileData(client, true)
 		liked := make(chan bool)
 		go user.check.CheckUserPopularity(client, username, liked)
-		data.Liked = <-liked
 		data.Visit = false
+		data.Liked = <-liked
 		user.Result.User = client
 		user.Result.Data = data
 		//update token

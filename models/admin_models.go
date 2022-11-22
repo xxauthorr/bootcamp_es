@@ -1,18 +1,16 @@
 package models
 
 type AdminResult struct {
-	Admin     string      `json:"admin"`
-	Data      interface{} `json:"data"`
-	Authorize Token       `json:"authorization"`
+	Admin string      `json:"user"`
+	Data  interface{} `json:"data"`
 }
 
 type Entities struct {
-	Users         string
-	Teams         string
-	Scrims        string
-	Tournaments   string
-	Recruitments  string
-	Authorization Token
+	Users       string `json:"users"`
+	Teams       string `json:"teams"`
+	Tournaments string `json:"tournaments"`
+	// Scrims        string
+	// Recruitments  string
 }
 
 type AdminUserData struct {

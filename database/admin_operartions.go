@@ -40,6 +40,16 @@ func (a Admin) GetTournamentCount() string {
 	return count
 }
 
+func (a Admin) GetTournamentCout() string {
+	var count string
+	getStmnt := `SELECT count(id) FROM tournament_data;`
+	res := Db.QueryRow(getStmnt)
+	if err := res.Scan(&count); err != nil {
+		log.Panic(err.Error())
+		return ""
+	}
+	return count
+}
 func (a Admin) GetSerachData(req models.Search) (string, interface{}) {
 	var count int
 	if req.Entity == "user" {
@@ -203,6 +213,45 @@ func (a Admin) Block(action string, user string) bool {
 		stmnt = `UPDATE user_data SET block = 'false' WHERE username = $1;`
 	}
 	_, err := Db.Exec(stmnt, user)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
+func (a Admin) DeleteTournament(tourney string) bool {
+	stmnt := `DELETE FROM tournament_data WHERE tournament_name = $1;`
+	_, err := Db.Exec(stmnt, tourney)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
+func (a Admin) DeleteTeam(team string) bool {
+	stmnt := `DELETE FROM team_data WHERE team_name = $1;`
+	_, err := Db.Exec(stmnt, team)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	stmnt = `UPDATE user_data SET team = null WHERE team = $1;`
+	_, err = Db.Exec(stmnt, team)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	stmnt = `DELETE FROM user_notifications WHERE team = $1;`
+	_, err = Db.Exec(stmnt, team)
+	if err != nil {
+
+		fmt.Println(err.Error())
+		return false
+	}
+	stmnt = `DELETE FROM team_notifications WHERE team = $1;`
+	_, err = Db.Exec(stmnt, team)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
