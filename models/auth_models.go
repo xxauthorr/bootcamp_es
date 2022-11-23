@@ -28,23 +28,23 @@ type Search struct {
 }
 
 type HomeData struct {
-	User          string       `json:"user"`
-	Banner        string       `json:"banner"`
-	Top_Players   []TopPlayers `json:"players"`
-	Top_teams     []TopTeams   `json:"teams"`
-	Authorization Token        `json:"authorization"`
+	User        string       `json:"user"`
+	Banner      string       `json:"banner"`
+	Top_Players []TopPlayers `json:"players"`
+	Top_teams   []TopTeams   `json:"teams"`
+	Youtube     interface{}  `json:"youtube_data"`
 }
 
 type TopPlayers struct {
-	Player     string `json:"name"`
+	Player     string  `json:"name"`
 	Avatar     *string `json:"avatar"`
 	Team       *string `json:"team"`
-	Popularity string `json:"popularity"`
+	Popularity string  `json:"popularity"`
 }
 
 type TopTeams struct {
-	Team       string `json:"team"`
+	Team       string  `json:"team"`
 	Avatar     *string `json:"avatar"`
-	Leader     string `json:"leader"`
-	Popularity string `json:"popularity"`
+	Leader     string  `json:"leader"`
+	Popularity string  `json:"popularity"`
 }

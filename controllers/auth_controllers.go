@@ -7,10 +7,12 @@ import (
 
 	// bycrypt "github.com/xxauthorr/bootcamp_es/services/byCrypt"
 	"github.com/xxauthorr/bootcamp_es/services/jwt"
+	"github.com/xxauthorr/bootcamp_es/services/youtube"
 
-	"github.com/xxauthorr/bootcamp_es/services/twilio"
 	"fmt"
 	"net/http"
+
+	"github.com/xxauthorr/bootcamp_es/services/twilio"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -34,6 +36,7 @@ type Auth struct {
 	twilio         twilio.Do
 	jwt            jwt.Jwt
 	admin          AdminControllers
+	youtube        youtube.YouTube
 }
 
 func (c Auth) GetToken(ctx *gin.Context) {
@@ -112,6 +115,7 @@ func (c Auth) CheckTeam(ctx *gin.Context) {
 func (c Auth) Home(ctx *gin.Context) {
 	status := c.help.Authorize(ctx)
 	homeData := c.help.GetHomeData()
+	homeData.Youtube = c.youtube.GetYtData()
 	if !status {
 		// for not logged in users
 		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
@@ -123,9 +127,7 @@ func (c Auth) Home(ctx *gin.Context) {
 		return
 	}
 	// for logged in users
-	token := c.help.GetToken(user)
 	homeData.User = user
-	homeData.Authorization = token
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Request succesfully completed", "result": homeData})
 }
 
