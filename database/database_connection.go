@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -42,24 +43,44 @@ func ConnectDb() error {
 		sslMode: os.Getenv("DB_SSLMODE"),
 	}
 
-	conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s sslmode=%s",
+	initial_conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= postgres sslmode=%s",
+		configure.host,
+		configure.port,
+		configure.user,
+		configure.pass,
+		configure.sslMode)
+
+	Db, err = sql.Open(configure.user, initial_conf)
+	if err != nil {
+		log.Fatal("Error connecting to database - ", err)
+		return err
+	}
+	// tada
+	_, err = Db.Exec(`CREATE DATABASE ` + configure.dbName + `;`)
+	if err != nil {
+		if res := strings.Contains(err.Error(), configure.dbName); !res {
+			return err
+		}
+		return nil
+	}
+
+	primary_conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s sslmode=%s",
 		configure.host,
 		configure.port,
 		configure.user,
 		configure.pass,
 		configure.dbName,
 		configure.sslMode)
-
-	gormDb, err := gorm.Open(postgres.Open(conf), &gorm.Config{})
+	Db, err = sql.Open(configure.user, primary_conf)
+	if err != nil {
+		log.Fatal("Error connecting to database - ", err)
+		return err
+	}
+	gormDb, err := gorm.Open(postgres.Open(primary_conf), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Error executing gorm  - ", err)
 		return err
 	}
 	AutoMigrateTables(gormDb)
-	Db, err = sql.Open(configure.user, conf)
-	if err != nil {
-		log.Fatal("Error connecting to database - ", err)
-		return err
-	}
 	return nil
 }

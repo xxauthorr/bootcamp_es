@@ -118,12 +118,12 @@ func (c Auth) Home(ctx *gin.Context) {
 	homeData.Youtube = c.youtube.GetYtData()
 	if !status {
 		// for not logged in users
-		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
+		ctx.JSON(http.StatusOK, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
 		return
 	}
 	user := ctx.GetString("user")
 	if res := c.dbCheck.CheckUserBlocked(user); !res {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
+		ctx.JSON(http.StatusOK, gin.H{"status": status, "message": "Request succesfully completed for guest user", "result": homeData})
 		return
 	}
 	// for logged in users
