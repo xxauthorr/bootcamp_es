@@ -55,7 +55,7 @@ func ConnectDb() error {
 		log.Fatal("Error connecting to database - ", err)
 		return err
 	}
-
+	// tada
 	_, err = Db.Exec(`CREATE DATABASE ` + configure.dbName + `;`)
 	if err != nil {
 		if res := strings.Contains(err.Error(), configure.dbName); !res {
