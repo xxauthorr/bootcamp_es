@@ -43,12 +43,11 @@ func ConnectDb() error {
 		sslMode: os.Getenv("DB_SSLMODE"),
 	}
 
-	initial_conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s sslmode=%s",
+	initial_conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= postgres sslmode=%s",
 		configure.host,
 		configure.port,
 		configure.user,
 		configure.pass,
-		"postgres",
 		configure.sslMode)
 
 	Db, err = sql.Open(configure.user, initial_conf)
