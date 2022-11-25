@@ -1,12 +1,13 @@
 package controllers
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/xxauthorr/bootcamp_es/database"
 	"github.com/xxauthorr/bootcamp_es/helpers"
 	"github.com/xxauthorr/bootcamp_es/models"
 	amazons3 "github.com/xxauthorr/bootcamp_es/services/AmazonS3"
-	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -90,7 +91,7 @@ func (t Team) RegisterTeam(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+t.teamRegister.TeamName)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully complete"})
 }
 
 func (c EditTeam) TeamEditBio(ctx *gin.Context) {
@@ -123,7 +124,7 @@ func (c EditTeam) TeamEditBio(ctx *gin.Context) {
 		ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully complete"})
 }
 
 func (c EditTeam) TeamAddAchievements(ctx *gin.Context) {
@@ -185,7 +186,7 @@ func (c EditTeam) TeamDelAchievements(ctx *gin.Context) {
 		ctx.JSON(http.StatusSeeOther, "/teamprofile/"+team)
 		return
 	}
-	ctx.Redirect(http.StatusSeeOther, "/teamprofile/"+team)
+	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "request successfully complete"})
 }
 
 func (c EditTeam) UpdateTeamNotification(ctx *gin.Context) {
