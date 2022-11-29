@@ -5,7 +5,6 @@ import (
 	"github.com/xxauthorr/bootcamp_es/helpers"
 	"github.com/xxauthorr/bootcamp_es/models"
 
-	// bycrypt "github.com/xxauthorr/bootcamp_es/services/byCrypt"
 	"github.com/xxauthorr/bootcamp_es/services/jwt"
 	"github.com/xxauthorr/bootcamp_es/services/youtube"
 
@@ -172,15 +171,15 @@ func (c Auth) SignUp(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"status": false, "message": "Account already exist using this username"})
 		return
 	}
-	// res, err := c.twilio.CheckOtp(c.signup.Phone, c.signup.Otp)
-	// if err != nil {
-	//	ctx.Redirect(http.StatusInternalServerError, "/home")
-	// 	return
-	// }
-	// if !res {
-	// 	ctx.JSON(http.StatusBadRequest, gin.H{"status": res, "message": "otp is invalid !"})
-	// 	return
-	// }
+	res, err := c.twilio.CheckOtp(c.signup.Phone, c.signup.Otp)
+	if err != nil {
+		ctx.Redirect(http.StatusInternalServerError, "/home")
+		return
+	}
+	if !res {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": res, "message": "otp is invalid !"})
+		return
+	}
 	if err := c.UserDB.InsertUser(c.signup); err != nil {
 		ctx.Redirect(http.StatusInternalServerError, "/home")
 		return
@@ -250,10 +249,10 @@ func (c Auth) ForgotPassword(ctx *gin.Context) {
 			return
 		}
 		c.forgetPass.Phone = c.help.GetPhone(c.forgetPass.Username)
-		// if err := c.twilio.SendOtp(c.forgetPass.Phone); err != nil {
-		// 	ctx.Redirect(http.StatusInternalServerError, "/home")
-		// 	return
-		// }
+		if err := c.twilio.SendOtp(c.forgetPass.Phone); err != nil {
+			ctx.Redirect(http.StatusInternalServerError, "/home")
+			return
+		}
 		phone := c.help.NakeString(c.forgetPass.Phone)
 		ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Otp has send to your phone :" + phone})
 		return
@@ -262,10 +261,10 @@ func (c Auth) ForgotPassword(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Account using this number does'nt exist!"})
 		return
 	}
-	// if err := c.twilio.SendOtp(c.forgetPass.Phone); err != nil {
-	// 	ctx.Redirect(http.StatusInternalServerError, "/home")
-	// 	return
-	// }
+	if err := c.twilio.SendOtp(c.forgetPass.Phone); err != nil {
+		ctx.Redirect(http.StatusInternalServerError, "/home")
+		return
+	}
 	phone := c.help.NakeString(c.forgetPass.Phone)
 	ctx.JSON(http.StatusOK, gin.H{"status": true, "message": "Otp has send to your phone :" + phone})
 }

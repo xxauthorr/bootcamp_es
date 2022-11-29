@@ -28,7 +28,7 @@ type result struct {
 
 var results []result
 
-func apiKey() string {
+func ytApiKey() string {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal(".env file loading error - ", err)
@@ -42,7 +42,7 @@ func (yt YouTube) GetYtData() interface{} {
 
 	flag.Parse()
 	ctx := context.Background()
-	developerKey := apiKey()
+	developerKey := ytApiKey()
 	service, err := youtube.NewService(ctx, option.WithAPIKey(developerKey))
 
 	if err != nil {

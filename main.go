@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/xxauthorr/bootcamp_es/database"
-	routes "github.com/xxauthorr/bootcamp_es/routes"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/xxauthorr/bootcamp_es/database"
+	routes "github.com/xxauthorr/bootcamp_es/routes"
 
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,9 @@ func main() {
 	port := os.Getenv("PORT")
 
 	// connect to the psql database and return error if any
-	database.ConnectDb()
+	if err := database.ConnectDb(); err != nil {
+		log.Fatal(err.Error())
+	}
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Logger())
