@@ -61,7 +61,6 @@ func ConnectDb() error {
 		if res := strings.Contains(err.Error(), configure.dbName); !res {
 			return err
 		}
-		return nil
 	}
 
 	primary_conf := fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s sslmode=%s",
