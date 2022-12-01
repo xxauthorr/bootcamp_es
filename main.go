@@ -30,11 +30,13 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
+	routes.UnAuthRoutes(router)
 	routes.Authroutes(router)
 	routes.Team(router)
 	routes.User(router)
 	routes.Tournament(router)
 	routes.Admin(router)
+	router.NoRoute(routes.BadRoute)
 
 	color.New(color.BgHiGreen).Print("server is running...")
 	fmt.Println()
