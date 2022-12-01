@@ -30,8 +30,8 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	routes.UnAuthRoutes(router)
 	routes.Authroutes(router)
+	routes.UnAuthRoutes(router)
 	routes.Team(router)
 	routes.User(router)
 	routes.Tournament(router)

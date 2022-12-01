@@ -21,7 +21,7 @@ var auth unAuth
 func Authroutes(incommingRoutes *gin.Engine) {
 	routes := incommingRoutes.Group("/auth")
 	routes.GET("/gettoken", auth.c.GetToken)
-	routes.POST("/login", auth.c.Login)
+	incommingRoutes.POST("/auth/login", auth.c.Login)
 	routes.POST("/otp", auth.c.SendPhoneOTP)
 	routes.POST("/signup", auth.c.SignUp)
 	routes.POST("/forgotpassword", auth.c.ForgotPassword)

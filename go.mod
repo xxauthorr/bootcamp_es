@@ -1,20 +1,20 @@
 module github.com/xxauthorr/bootcamp_es
 
-go 1.19
+go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.136
+	github.com/aws/aws-sdk-go v1.44.150
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fatih/color v1.13.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
-	github.com/twilio/twilio-go v1.2.0
-	golang.org/x/crypto v0.2.0
+	github.com/twilio/twilio-go v1.2.2
+	golang.org/x/crypto v0.3.0
 	google.golang.org/api v0.103.0
 	gorm.io/driver/postgres v1.4.5
-	gorm.io/gorm v1.24.1
+	gorm.io/gorm v1.24.2
 )
 
 require (
