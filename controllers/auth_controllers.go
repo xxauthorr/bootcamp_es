@@ -188,8 +188,9 @@ func (c Auth) SignUp(ctx *gin.Context) {
 }
 
 func (c Auth) Login(ctx *gin.Context) {
+	fmt.Println("working")
 	if err := ctx.BindJSON(&c.login); err != nil {
-		ctx.Redirect(http.StatusBadRequest, "/home")
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid entry !"})
 		return
 	}
 	if err := validate.Struct(c.login); err != nil {
@@ -207,7 +208,7 @@ func (c Auth) Login(ctx *gin.Context) {
 	}
 	res, err := c.dbCheck.CheckPassword(c.login.UserName, c.login.Password)
 	if err != nil {
-		ctx.Redirect(http.StatusBadRequest, "/home")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "internal server error"})
 		return
 	}
 	if !res {
