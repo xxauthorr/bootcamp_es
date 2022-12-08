@@ -24,15 +24,21 @@ For storing the files from the client i used the AMAZON S3 bucket which is also 
 This project is much more scalable than this stage but still i have included multiple api's to this project which are listed below.
 
 Twilio   - Which helps with the OTP authentication 
+
 Youtube  - As it is an esports platform i bring the top game streaming live to this page which would encourage the gamers to get promoted and notified.
+
 AmazonS3 - This is used to upload the files to the amazon file server.
 
 ## Future Add on's
 
 -Will be adding web sockets to bring chat within the players and in the team.
+
 -More api's like youtube to showcase the players skills
+
 -Will be including merchandise shop for the teams where they can sell their brand products
+
 -Will be including pubg,clash of clans,call of duty,fortnite,etc.. api's to verify the user and bring their gaming experience status 
+
 -Live streaming gameplays can also may be added in the future
 
 
