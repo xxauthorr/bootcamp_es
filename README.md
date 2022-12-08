@@ -1,9 +1,9 @@
 # BootCampers Esports
 Hi Mates, This is my first restful api project done using Go Language. It took me over three weeks to complete the project and i have included multiple api's and packages in it.The whole project is done on popular golang framework called Gin. 
 
-The project is dedicated to the esports community. It is basically a platform for gamers and their associates. Through this application anyone can able to host or book their tournaments and practice matches for any type of e-games, User can create team and add his gaming mates and start a new organization, Players or the team leader can able to send team join requests and the teams even able to add team recruitment notices. These things can be done after creating an account in BootCampers Esports. It is basically an alternative of discord but in BooCampers Esports it is much more easy to make it happen because here i only included the things that are really needed for the gamers. 
+The project is dedicated to the esports community. It is basically a platform for gamers and their associates. Through this application anyone can able to host or book their tournaments and practice matches for any type of e-games, User can create team and add his gaming mates and start a new organization, Players or the team leader can able to send team join requests and the teams even able to add team recruitment notices. These things can be done after creating an account in BootCampers Esports. It is basically an alternative of discord but in BootCampers Esports it is much more easy to make it happen because here i only included the things that are really needed for the gamers. 
 
-It is a very secured application that i have used the JWT authorization and OTP signup. And i tried to bring a lot of features in this release and i have a bundle of other features that i will be including in the future. I have completed this project in very good coding standards and it is flexible so any programers can easily understand the code and easily adapt the working flow of the project. I have followed the MVC code architecture which is very important while building a large scale program. These all made the project flexible and scalable.
+It is a very secured application that i have used the JWT authorization and OTP signup. And i tried to bring a lot of features in this release and i have a bundle of other features that i will be including in the future. I have completed this project in very good coding standards and it is flexible, So any programers can easily understand the code and easily adapt the working flow of the project. I have followed the MVC code architecture which is very important while building a large scale program. These all made the project flexible and scalable.
 
 ## Deployment 
 
@@ -13,7 +13,7 @@ I Deployed my project in AWS cloud service called EC2 which is a remote instance
 
 ## Database
 
-I have used the RDS service which is cloud relation database service provided by the AWS(Amazon web service) in which we can deploy or use any type of SQL databases. I have done the project using the PSQL(Postgres SQL) which is free to use until certain amount of usage.
+I have used the RDS service which is cloud relational database service provided by the AWS(Amazon web service) in which we can deploy or use any type of SQL databases. I have done the project using the PSQL(Postgre SQL) which is free to use until certain amount of usage.
 
 ## File Server
 
