@@ -7,7 +7,7 @@ It is a very secured application that i have used the JWT authorization and OTP 
 
 ## Deployment 
 
-So as it's my first project i done hosting in basic methods, So i can cover all the deployment things from the foundation which will help me understand each steps in future when am working on new techonologies like docker, kubernetes, and all those deployment tools. 
+So as it's my first project i done hosting in basic methods, So i can cover all the deployment methods from the foundation which will help me understand each steps in future when am working on new techonologies like docker, kubernetes, and all those deployment tools. 
 
 I Deployed my project in AWS cloud service called EC2 which is a remote instance(server). In that i used the nginx web server for handling the reverse proxy and configuring the web application to secure HTTPS.
 
