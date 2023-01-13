@@ -1,9 +1,10 @@
 package helpers
 
 import (
+	"fmt"
+
 	"github.com/xxauthorr/bootcamp_es/database"
 	"github.com/xxauthorr/bootcamp_es/models"
-	"fmt"
 )
 
 type UserHelper struct {
